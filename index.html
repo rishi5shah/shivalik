@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shivalik RoS | GIS Intelligence Portal (AUDA TP/VD Explorer)</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Custom Vanilla Styles -->
+  <link rel="stylesheet" href="src/css/styles.css?v=4.0">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Glass Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-logo">S</div>
+        <div class="brand-title">
+          <h1>Shivalik RoS</h1>
+          <span>GIS Intelligence Portal • AUDA Explorer</span>
+        </div>
+        <div class="status-badge">
+          <div class="pulse-dot"></div>
+          <span>Live GeoServer WMS Connected</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="search-container">
+          <input type="text" id="global-search" class="search-input" placeholder="Search TP Scheme, FP No, or Village...">
+          <span class="search-icon" style="font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">/</span>
+        </div>
+        <button id="auto-tour-btn" class="btn btn-tour">Auto-Tour Presentation</button>
+        <button id="open-pipeline-btn" class="btn btn-pipeline">Deal Pipeline <span id="pipeline-count" class="pipeline-badge-count">3</span></button>
+        <button id="open-wfs-btn" class="btn btn-gold">WFS Data Harvester</button>
+        <button id="open-guide-btn" class="btn btn-glass">System Setup Guide</button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-workspace">
+      
+      <!-- Left Sidebar: Layer Switcher & Bookmarks -->
+      <aside class="sidebar-panel">
+        <div class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="bookmarks">AUDA Growth Corridors</button>
+          <button class="tab-btn" data-tab="layers">GIS Layer Controls</button>
+        </div>
+
+        <div class="sidebar-content">
+          <!-- Tab 1: Bookmarks -->
+          <div id="tab-content-bookmarks">
+            <div class="section-title">
+              <span>Prime Real Estate Zones</span>
+              <span>Ahmedabad</span>
+            </div>
+            <div id="bookmarks-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Tab 2: Layers Switcher -->
+          <div id="tab-content-layers" style="display: none;">
+            <div class="section-title">
+              <span>Town Planning (TP) Layers</span>
+              <span>WMS</span>
+            </div>
+            <div class="layer-group">
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-info">
+                    <div class="layer-legend-dot" style="background: #00f2fe; box-shadow: 0 0 8px #00f2fe;"></div>
+                    <span class="layer-name">Final Plot Boundary (FP)</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" data-layer="fp_boundary" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="layer-code">ctp:final_plot_boundary</div>
+                <div class="opacity-slider-container">
+                  <span class="opacity-label">Opacity</span>
+                  <input type="range" class="range-slider" data-layer-opacity="fp_boundary" min="0" max="1" step="0.05" value="0.8">
+                </div>
+              </div>
+
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-info">
+                    <div class="layer-legend-dot" style="background: #4facfe; border: 1px dashed #fff;"></div>
+                    <span class="layer-name">Original Plot Boundary (OP)</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" data-layer="op_boundary">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="layer-code">ctp:original_plot_boundary</div>
+              </div>
+
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-info">
+                    <div class="layer-legend-dot" style="background: #f59e0b;"></div>
+                    <span class="layer-name">TP Road Network & Widths</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" data-layer="tp_roads" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="layer-code">ctp:road</div>
+                <div class="opacity-slider-container">
+                  <span class="opacity-label">Opacity</span>
+                  <input type="range" class="range-slider" data-layer-opacity="tp_roads" min="0" max="1" step="0.05" value="0.75">
+                </div>
+              </div>
+
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-info">
+                    <div class="layer-legend-dot" style="background: #f43f5e;"></div>
+                    <span class="layer-name">DP Reservation Lines</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" data-layer="dp_reservations" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="layer-code">ctp:dp_reservation_line</div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <span>Village / Revenue (VD) Layers</span>
+              <span>Cadastral</span>
+            </div>
+            <div class="layer-group">
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-info">
+                    <div class="layer-legend-dot" style="background: #8b5cf6;"></div>
+                    <span class="layer-name">Revenue Survey Line</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" data-layer="revenue_survey">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="layer-code">ctp:survey_line</div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <span>Infrastructure & Constraints</span>
+              <span>Hazards</span>
+            </div>
+            <div class="layer-group">
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-info">
+                    <div class="layer-legend-dot" style="background: #ef4444; box-shadow: 0 0 8px #ef4444;"></div>
+                    <span class="layer-name">ONGC Pipeline Buffer</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" data-layer="ongc_pipeline" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="layer-code">ctp:ongc_pipeline</div>
+              </div>
+
+              <div class="layer-item">
+                <div class="layer-header">
+                  <div class="layer-info">
+                    <div class="layer-legend-dot" style="background: #eab308;"></div>
+                    <span class="layer-name">High Tension (HT) Line</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" data-layer="ht_line">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="layer-code">ctp:ht_line</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Map Canvas -->
+      <section class="map-container">
+        <div id="map"></div>
+        
+        <!-- Floating Base Map Switcher -->
+        <div class="map-toolbar">
+          <button class="toolbar-btn active" data-base="Google Satellite">Satellite View</button>
+          <button class="toolbar-btn" data-base="Google Streets">Street Roadmap</button>
+          <button class="toolbar-btn" data-base="Google Hybrid">Hybrid View</button>
+          <button class="toolbar-btn" data-base="Dark GIS Theme">Dark GIS Theme</button>
+        </div>
+
+        <!-- Coords Footer Bar -->
+        <div class="map-coords-bar">
+          <span>CRS: <strong style="color: #fff;">EPSG:4326 / 3857</strong></span>
+          <span>•</span>
+          <span>Target: <strong class="coord-value" id="current-coords">23.04500° N, 72.50000° E</strong></span>
+          <span>•</span>
+          <span style="color: var(--accent-emerald);">● Live Vector Boundary Layer Active</span>
+        </div>
+      </section>
+
+      <!-- Plot Intelligence Due Diligence Drawer (Right Sidebar) -->
+      <aside id="due-diligence-drawer" class="intelligence-drawer">
+        <div class="drawer-header">
+          <div class="drawer-title">
+            <div>
+              <h3 style="font-weight: 800; letter-spacing: -0.5px;">Institutional Plot Underwriting</h3>
+              <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 600;" id="dd-tps-name">AUDA Scheme</span>
+            </div>
+          </div>
+          <button id="close-drawer-btn" class="close-btn">✕</button>
+        </div>
+
+        <div class="drawer-body">
+          <!-- Automated DCR 2035 Feasibility Scorecard -->
+          <div class="feasibility-card" style="border: 1px solid rgba(0, 242, 254, 0.4); background: linear-gradient(135deg, rgba(0, 242, 254, 0.08) 0%, rgba(15, 23, 42, 0.95) 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 10px; margin-bottom: 10px;">
+              <div>
+                <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent-cyan); font-weight: 800;">DCR 2035 Underwriting Audit</span>
+                <div style="font-size: 15px; font-weight: 800; color: #fff; margin-top: 2px;" id="dd-score-title">PRIME COMMERCIAL ACQUISITION</div>
+              </div>
+              <div style="background: var(--gradient-emerald); padding: 5px 12px; border-radius: 20px; font-weight: 900; font-size: 15px; color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);" id="dd-score-val">94 / 100</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+              <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid #10b981; padding: 6px 8px; border-radius: 2px;">
+                <strong id="dd-score-frontage" style="color: #10b981;">[PASS] Road Frontage:</strong><br/><span style="color: #cbd5e1; font-size: 10px;" id="dd-score-frontage-desc">Abuts >30m TP Road</span>
+              </div>
+              <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid #10b981; padding: 6px 8px; border-radius: 2px;">
+                <strong id="dd-score-zone" style="color: #10b981;">[PASS] FSI Advantage:</strong><br/><span style="color: #cbd5e1; font-size: 10px;" id="dd-score-zone-desc">TOZ Zone (+1.3 Bonus)</span>
+              </div>
+              <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid #10b981; padding: 6px 8px; border-radius: 2px;">
+                <strong style="color: #10b981;">[PASS] Utility Buffers:</strong><br/><span style="color: #cbd5e1; font-size: 10px;">0% HT / Pipeline Overlap</span>
+              </div>
+              <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid #10b981; padding: 6px 8px; border-radius: 2px;">
+                <strong style="color: #10b981;">[PASS] Title Status:</strong><br/><span style="color: #cbd5e1; font-size: 10px;">Freehold / Old Tenure</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parcel ID Card -->
+          <div class="feasibility-card">
+            <div class="card-title">Parcel Identification & Survey</div>
+            <div class="metric-grid">
+              <div class="metric-item">
+                <div class="metric-label">Final Plot (FP) No.</div>
+                <div class="metric-value metric-highlight" id="dd-fp-no">FP 142/P1</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Original Plot (OP) No.</div>
+                <div class="metric-value" id="dd-op-no">OP 98</div>
+              </div>
+              <div class="metric-item" style="grid-column: span 2;">
+                <div class="metric-label">Revenue Survey & Village</div>
+                <div class="metric-value" id="dd-survey-no" style="font-size: 14px;">Survey 341/1 (Bodakdev)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Area & Road Frontage -->
+          <div class="feasibility-card">
+            <div class="card-title">Geometry & Road Access</div>
+            <div class="metric-grid">
+              <div class="metric-item">
+                <div class="metric-label">Plot Area (Metric)</div>
+                <div class="metric-value" id="dd-area-sqm">8,450 m²</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Plot Area (Imperial)</div>
+                <div class="metric-value" id="dd-area-sqyd">10,106 sq. yd.</div>
+              </div>
+              <div class="metric-item" style="grid-column: span 2;">
+                <div class="metric-label">Abuttal TP Road Frontage</div>
+                <div class="metric-value metric-gold" id="dd-road-frontage" style="font-size: 13px;">36m Sindhu Bhavan Road</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DCR Zoning & FSI -->
+          <div class="feasibility-card">
+            <div class="card-title">Permissible DCR Development</div>
+            <div class="metric-grid">
+              <div class="metric-item" style="grid-column: span 2;">
+                <div class="metric-label">Zoning Classification</div>
+                <div class="metric-value" id="dd-zoning" style="font-size: 13px;">Transit Oriented Zone / R1</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Base FSI</div>
+                <div class="metric-value" id="dd-base-fsi">2.7</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Chargeable FSI</div>
+                <div class="metric-value" id="dd-chargeable-fsi">+1.3</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Total Permissible FSI</div>
+                <div class="metric-value metric-highlight" id="dd-total-fsi">4.0</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Max Permissible Height</div>
+                <div class="metric-value" id="dd-height">70 Meters</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Legal Title & Revenue Clearance Card -->
+          <div class="feasibility-card">
+            <div class="card-title">Legal Title & Revenue Verification</div>
+            <div class="metric-grid">
+              <div class="metric-item">
+                <div class="metric-label">Tenure Classification</div>
+                <div class="metric-value" id="dd-legal-tenure" style="font-size: 13px;">Old Tenure (Freehold)</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">iORA 7/12 & 8-A Record</div>
+                <div class="metric-value" id="dd-legal-iora" style="font-size: 13px; color: var(--accent-emerald); font-weight: 700;">[VERIFIED] Online Record</div>
+              </div>
+              <div class="metric-item" style="grid-column: span 2;">
+                <div class="metric-label">Title Search Report (Last 30 Years)</div>
+                <div class="metric-value metric-gold" id="dd-legal-title" style="font-size: 13px;">[APPROVED] Clean Legal Title Search</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Financial Valuation & Live ROI Calculator -->
+          <div class="feasibility-card" style="border: 1px solid rgba(16, 185, 129, 0.4);">
+            <div class="card-title" style="color: var(--accent-emerald);">Live ROI & Feasibility Financial Model</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px;">Adjust acquisition & construction assumptions to evaluate institutional returns:</div>
+            
+            <div class="roi-input-group">
+              <label>Land Rate (₹ / sq. yd)</label>
+              <input type="number" id="calc-land-rate" value="150000" step="5000" class="roi-input">
+            </div>
+            <div class="roi-input-group">
+              <label>Const. Cost (₹ / sq. ft)</label>
+              <input type="number" id="calc-const-cost" value="3000" step="250" class="roi-input">
+            </div>
+            <div class="roi-input-group">
+              <label>Expected Selling Rate (₹ / sq. ft)</label>
+              <input type="number" id="calc-sale-rate" value="9500" step="500" class="roi-input">
+            </div>
+
+            <div class="metric-grid" style="margin-top: 12px; background: rgba(0,242,254,0.03); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+              <div class="metric-item">
+                <div class="metric-label">Total Land Cost</div>
+                <div class="metric-value" id="res-land-cost">₹150.00 Cr</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Total Const. Cost</div>
+                <div class="metric-value" id="res-const-cost">₹109.14 Cr</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Total Project Outlay</div>
+                <div class="metric-value" style="color:#fff;" id="res-total-cost">₹259.14 Cr</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Expected Revenue</div>
+                <div class="metric-value metric-gold" id="res-revenue">₹345.62 Cr</div>
+              </div>
+              <div class="metric-item" style="grid-column: span 2; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">
+                <div>
+                  <div class="metric-label">Expected Net Developer Profit</div>
+                  <div class="metric-value" style="color: var(--accent-emerald); font-size: 18px;" id="res-profit">₹86.48 Cr</div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="metric-label">Project ROI</div>
+                  <div class="metric-value" style="color: var(--accent-emerald); font-size: 20px; font-weight: 800;" id="res-roi">33.4%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hazard Audit -->
+          <div class="feasibility-card">
+            <div class="card-title">Environmental Hazard & Constraint Audit</div>
+            <div id="dd-hazard-box" class="hazard-badge hazard-safe">
+              <strong>Status: CLEAR (No Environmental Restrictions)</strong><br/>
+              <small style="font-weight:normal; display:block; margin-top:4px;">All utility & environmental safety buffer zones clear.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-footer">
+          <button id="save-ros-btn" class="btn btn-primary" style="width: 100%;">Add to RoS Deal Pipeline</button>
+          <button id="export-report-btn" class="btn btn-glass" style="width: 100%;">Download Executive Feasibility Report (PDF)</button>
+        </div>
+      </aside>
+
+    </main>
+  </div>
+
+  <!-- Modal 1: WFS Harvester Sandbox -->
+  <div id="wfs-harvester-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="font-weight:800;">Live WFS Data Harvester & Ingestion Sandbox</h2>
+        <button class="close-btn close-modal-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Perform real-time OGC Web Feature Service (WFS) geometry harvesting directly from the official Gujarat Town Planning GeoServer (`tpvd.openprp.in`). This engine streams verified government vector boundaries into your internal database.</p>
+        
+        <div style="display: flex; gap: 12px; margin: 16px 0;">
+          <select id="wfs-layer-select" class="search-input" style="width: 70%;">
+            <option value="ctp:final_plot_boundary">AUDA Final Plot Boundaries (ctp:final_plot_boundary)</option>
+            <option value="ctp:original_plot_boundary">AUDA Original Plot Boundaries (ctp:original_plot_boundary)</option>
+            <option value="ctp:road">AUDA TP Road Network (ctp:road)</option>
+            <option value="ctp:dp_reservation_line">AUDA DP Reservations (ctp:dp_reservation_line)</option>
+          </select>
+          <button id="run-harvest-test" class="btn btn-primary" style="width: 30%;">▶ Run Extraction</button>
+        </div>
+
+        <h4>Console & GeoJSON Payload Output:</h4>
+        <pre id="wfs-console-output" class="code-box" style="height: 250px; overflow-y: auto;">Click 'Run Extraction' to initiate OGC WFS GetFeature query...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Google Maps API Setup Guide -->
+  <div id="api-guide-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="font-weight:800;">Google Maps Cloud API Integration Guide</h2>
+        <button class="close-btn close-modal-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Currently, this Shivalik GIS Portal operates standalone using <strong>Google Maps XYZ Satellite Tiles</strong> and Leaflet without requiring an API key. When you are ready to integrate directly into <strong>Shivalik RoS</strong> with native Google Maps JavaScript API, follow these 3 steps:</p>
+
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div>
+            <h4 style="margin: 0 0 6px 0;">Create Google Cloud Project & Enable Billing</h4>
+            <p style="margin: 0;">Visit the <a href="https://console.cloud.google.com/" target="_blank" style="color: var(--accent-cyan);">Google Cloud Console</a>. Create a new project (e.g., <code>shivalik-ros-gis</code>). Add a credit card to activate billing (Google provides $200 free monthly credit, covering ~28,000 map loads per month).</p>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div>
+            <h4 style="margin: 0 0 6px 0;">Enable Required API Libraries</h4>
+            <p style="margin: 0;">In the API Library, search for and enable: <strong>1) Maps JavaScript API</strong>, <strong>2) Places API</strong> (for search autocomplete), and <strong>3) Geocoding API</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div>
+            <h4 style="margin: 0 0 6px 0;">Generate & Restrict API Key</h4>
+            <p style="margin: 0;">Go to <em>APIs & Services > Credentials > Create Credentials > API Key</em>. For security, restrict the key by HTTP referrer to your internal RoS domain (e.g., <code>*.shivalikgroup.com/*</code> or <code>localhost:*</code>).</p>
+          </div>
+        </div>
+
+        <h4>Production Code Injection Example:</h4>
+        <div class="code-box">
+&lt;script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places,geometry"&gt;&lt;/script&gt;
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Shivalik RoS Deal Pipeline CRM Board -->
+  <div id="pipeline-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 1050px; width: 95%;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div>
+            <h2 style="margin: 0; font-weight:800;">Shivalik RoS Deal Pipeline & Acquisition Board</h2>
+            <span style="font-size: 12px; color: var(--accent-cyan); font-weight:600;">Active Land Acquisition & Title Due Diligence Portfolio</span>
+          </div>
+        </div>
+        <button id="close-pipeline-btn" class="close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.08);">
+          <div>
+            <span style="color: var(--text-secondary); font-size: 13px;">Total Pipeline Land Value:</span>
+            <strong style="color: var(--accent-emerald); font-size: 22px; margin-left: 8px;" id="pipeline-total-value">₹533.45 Cr</strong>
+          </div>
+          <div style="font-size: 12px; color: var(--accent-emerald); font-weight:700;">
+            [SYNCED] Real-Time Connection with PostGIS & Legal Database
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="pipeline-table">
+            <thead>
+              <tr>
+                <th>Deal ID</th>
+                <th>Plot (FP No)</th>
+                <th>AUDA TP Scheme</th>
+                <th>Area (m²)</th>
+                <th>Tenure</th>
+                <th>Est. Land Value</th>
+                <th>Acquisition Stage</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pipeline-table-body">
+              <!-- Dynamically populated by pipeline-modal.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- App JS Controllers -->
+  <script src="src/js/auda-data.js?v=4.0"></script>
+  <script src="src/js/map-engine.js?v=4.0"></script>
+  <script src="src/js/search-controller.js?v=4.0"></script>
+  <script src="src/js/due-diligence.js?v=4.0"></script>
+  <script src="src/js/harvester-modal.js?v=4.0"></script>
+  <script src="src/js/pipeline-modal.js?v=4.0"></script>
+  <script src="src/js/auto-tour.js?v=4.0"></script>
+  <script src="src/js/app.js?v=4.0"></script>
+</body>
+</html>
