@@ -54,7 +54,15 @@ class MapEngine {
     this.currentBaseLayerName = 'Google Satellite';
 
     // Fix: Ensure Leaflet viewport container dimensions are immediately calculated so map tiles render without requiring a zoom
-    const invalidate = () => { if (this.map) { this.map.invalidateSize(); } };
+    const invalidate = () => {
+      if (this.map) {
+        this.map.invalidateSize({ animate: false });
+        // Force Leaflet tile engine to check and paint visible viewport immediately
+        const center = this.map.getCenter();
+        const zoom = this.map.getZoom();
+        if (center && zoom) this.map.setView(center, zoom, { animate: false, pan: false });
+      }
+    };
     setTimeout(invalidate, 50);
     setTimeout(invalidate, 250);
     setTimeout(invalidate, 600);
@@ -173,15 +181,18 @@ class MapEngine {
 
   toggleWmsLayer(layerId, isVisible) {
     const layer = this.wmsLayers[layerId];
-    if (!layer) return;
-
-    if (isVisible) {
-      if (!this.map.hasLayer(layer)) {
-        layer.addTo(this.map);
+    if (layer) {
+      if (isVisible) {
+        if (!this.map.hasLayer(layer)) layer.addTo(this.map);
+      } else {
+        if (this.map.hasLayer(layer)) this.map.removeLayer(layer);
       }
-    } else {
-      if (this.map.hasLayer(layer)) {
-        this.map.removeLayer(layer);
+    }
+    if (layerId === 'fp_boundary' && this.vectorLayer) {
+      if (isVisible) {
+        if (!this.map.hasLayer(this.vectorLayer)) this.vectorLayer.addTo(this.map);
+      } else {
+        if (this.map.hasLayer(this.vectorLayer)) this.map.removeLayer(this.vectorLayer);
       }
     }
   }
@@ -347,7 +358,7 @@ class MapEngine {
             { sticky: true, className: 'custom-tooltip' }
           );
         }
-      }).addTo(this.map);
+      });
 
       // Save only available-for-sale features for search controller & due diligence
       window.loadedVectorFeatures = availableFeatures;
@@ -407,35 +418,33 @@ class MapEngine {
       const response = await fetch(url);
       const geojsonData = await response.json();
 
-      let addedCount = 0;
       if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+        const validFeatures = [];
         geojsonData.features.forEach(feature => {
           if (!feature.geometry || !this.isPlotAvailableForSale(feature)) return;
-          
-          const status = feature.properties.status || '';
-          const fpNo = feature.properties.fp_no || feature.properties.fp_number || `${101 + addedCount}`;
-          
-          const z = this.getPlotZoning(feature);
-          const areaSqm = feature.properties.fp_area_final || feature.properties.fp_area || feature.properties.area_sqm || Math.floor(3000 + (parseInt(fpNo) * 47) % 5000);
-          const estValuationCr = ((Number(areaSqm) * z.rate) / 10000000).toFixed(2);
+          validFeatures.push(feature);
+        });
 
-          const plotLayer = L.geoJSON(feature, {
-            style: {
-              color: '#ffffff',
-              weight: 2.0,
-              opacity: 0.95,
-              fillColor: z.color,
-              fillOpacity: 0.48,
-              dashArray: '2'
+        if (validFeatures.length > 0) {
+          let addedCount = 0;
+          const schemePlotLayer = L.geoJSON(validFeatures, {
+            style: (feature) => {
+              const z = this.getPlotZoning(feature);
+              return { color: '#ffffff', weight: 2.0, opacity: 0.95, fillColor: z.color, fillOpacity: 0.48, dashArray: '2' };
             },
-            onEachFeature: (feat, layer) => {
+            onEachFeature: (feature, layer) => {
+              const fpNo = feature.properties.fp_no || feature.properties.fp_number || `${101 + addedCount}`;
+              const z = this.getPlotZoning(feature);
+              const areaSqm = feature.properties.fp_area_final || feature.properties.fp_area || feature.properties.area_sqm || Math.floor(3000 + (parseInt(fpNo) * 47) % 5000);
+              const estValuationCr = ((Number(areaSqm) * z.rate) / 10000000).toFixed(2);
+
               layer.on({
                 mouseover: (e) => {
                   e.target.setStyle({ weight: 3.5, color: '#10b981', fillOpacity: 0.85 });
                   e.target.bringToFront();
                 },
                 mouseout: (e) => {
-                  plotLayer.resetStyle(e.target);
+                  schemePlotLayer.resetStyle(e.target);
                 },
                 click: (e) => {
                   L.DomEvent.stopPropagation(e);
@@ -463,15 +472,14 @@ class MapEngine {
                 </div>`,
                 { sticky: true, className: 'custom-tooltip' }
               );
+              addedCount++;
             }
           }).addTo(this.map);
 
-          this.internalPlotLayers.push(plotLayer);
-          addedCount++;
-        });
-
-        if (window.searchController && typeof window.searchController.showToast === 'function') {
-          window.searchController.showToast(`[TP PLOTS] Displaying ${addedCount} verified Available-for-Sale plots inside ${scheme.name}!`);
+          this.internalPlotLayers.push(schemePlotLayer);
+          if (window.searchController && typeof window.searchController.showToast === 'function') {
+            window.searchController.showToast(`[TP PLOTS] Displaying ${addedCount} verified Available-for-Sale plots inside ${scheme.name}!`);
+          }
         }
         return;
       }
@@ -481,47 +489,53 @@ class MapEngine {
 
     // Fallback: Check if we already have real road-clear polygons in window.loadedVectorFeatures
     if (window.loadedVectorFeatures && window.loadedVectorFeatures.length > 0) {
-      let addedCount = 0;
+      const validFallbackFeatures = [];
       window.loadedVectorFeatures.forEach(feature => {
         if (!feature.geometry || !this.isPlotAvailableForSale(feature)) return;
         
-        let bounds = null;
-        try {
-          const tempLayer = L.geoJSON(feature);
-          bounds = tempLayer.getBounds();
-        } catch (e) { return; }
-        
-        if (!bounds) return;
-        const centerLat = (bounds.getNorth() + bounds.getSouth()) / 2;
-        const centerLng = (bounds.getEast() + bounds.getWest()) / 2;
+        let coords = null;
+        if (feature.geometry.type === 'Polygon' && feature.geometry.coordinates) coords = feature.geometry.coordinates[0];
+        else if (feature.geometry.type === 'MultiPolygon' && feature.geometry.coordinates) coords = feature.geometry.coordinates[0][0];
+        if (!coords || !coords.length) return;
 
-        if (this._isPointInPolygon([centerLat, centerLng], scheme.boundary)) {
-          const fpNo = feature.properties.fp_no || feature.properties.fp_number || `${101 + addedCount}`;
-          const z = this.getPlotZoning(feature);
-          const areaSqm = feature.properties.fp_area_final || feature.properties.fp_area || feature.properties.area_sqm || 3500;
-          const estCr = ((Number(areaSqm) * z.rate) / 10000000).toFixed(2);
-
-          const plotLayer = L.geoJSON(feature, {
-            style: { color: '#ffffff', weight: 2.0, opacity: 0.95, fillColor: z.color, fillOpacity: 0.48, dashArray: '2' },
-            onEachFeature: (feat, layer) => {
-              layer.bindTooltip(
-                `<div style="font-family: 'Outfit', sans-serif; font-size: 12px; line-height: 1.4;">
-                  <span style="color: #10b981; font-weight: 800; font-size: 11px;">🟢 AVAILABLE FOR SALE (VERIFIED VACANT)</span><br/>
-                  <strong style="color: #fff; font-size: 13px;">FP No. ${fpNo}</strong> (${scheme.name})<br/>
-                  Zone: <strong style="color:${z.color};">${z.labelColor} ${z.code}</strong> | Area: <strong>${Number(areaSqm).toLocaleString()} m²</strong><br/>
-                  Max FSI: <strong>${z.fsi}</strong> | Asking Val: <strong style="color:#10b981;">₹${estCr} Cr</strong><br/>
-                  <span style="color: #38bdf8; font-size: 10px;">✔ 100% Clear Title • Shivalik Underwriting Approved</span>
-                </div>`,
-                { sticky: true, className: 'custom-tooltip' }
-              );
-            }
-          }).addTo(this.map);
-          this.internalPlotLayers.push(plotLayer);
-          addedCount++;
+        const centerLng = coords[0][0];
+        const centerLat = coords[0][1];
+        if (typeof centerLat === 'number' && typeof centerLng === 'number' && this._isPointInPolygon([centerLat, centerLng], scheme.boundary)) {
+          validFallbackFeatures.push(feature);
         }
       });
-      if (addedCount > 0 && window.searchController && typeof window.searchController.showToast === 'function') {
-        window.searchController.showToast(`[TP PLOTS] Displaying ${addedCount} verified Available-for-Sale plots inside ${scheme.name}!`);
+
+      if (validFallbackFeatures.length > 0) {
+        let addedCount = 0;
+        const fallbackLayer = L.geoJSON(validFallbackFeatures, {
+          style: (feature) => {
+            const z = this.getPlotZoning(feature);
+            return { color: '#ffffff', weight: 2.0, opacity: 0.95, fillColor: z.color, fillOpacity: 0.48, dashArray: '2' };
+          },
+          onEachFeature: (feature, layer) => {
+            const fpNo = feature.properties.fp_no || feature.properties.fp_number || `${101 + addedCount}`;
+            const z = this.getPlotZoning(feature);
+            const areaSqm = feature.properties.fp_area_final || feature.properties.fp_area || feature.properties.area_sqm || 3500;
+            const estCr = ((Number(areaSqm) * z.rate) / 10000000).toFixed(2);
+
+            layer.bindTooltip(
+              `<div style="font-family: 'Outfit', sans-serif; font-size: 12px; line-height: 1.4;">
+                <span style="color: #10b981; font-weight: 800; font-size: 11px;">🟢 AVAILABLE FOR SALE (VERIFIED VACANT)</span><br/>
+                <strong style="color: #fff; font-size: 13px;">FP No. ${fpNo}</strong> (${scheme.name})<br/>
+                Zone: <strong style="color:${z.color};">${z.labelColor} ${z.code}</strong> | Area: <strong>${Number(areaSqm).toLocaleString()} m²</strong><br/>
+                Max FSI: <strong>${z.fsi}</strong> | Asking Val: <strong style="color:#10b981;">₹${estCr} Cr</strong><br/>
+                <span style="color: #38bdf8; font-size: 10px;">✔ 100% Clear Title • Shivalik Underwriting Approved</span>
+              </div>`,
+              { sticky: true, className: 'custom-tooltip' }
+            );
+            addedCount++;
+          }
+        }).addTo(this.map);
+
+        this.internalPlotLayers.push(fallbackLayer);
+        if (window.searchController && typeof window.searchController.showToast === 'function') {
+          window.searchController.showToast(`[TP PLOTS] Displaying ${addedCount} verified Available-for-Sale plots inside ${scheme.name}!`);
+        }
       }
     }
   }
