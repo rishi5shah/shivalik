@@ -516,4 +516,20 @@
   checkHeadlessBot();
   setInterval(checkHeadlessBot, 3000);
 
+  // 10. Level-10 Anti-Tamper & Event Listener Removal Protection (Defeats DevTools Listener Stripping)
+  try {
+    const _origRemoveListener = EventTarget.prototype.removeEventListener;
+    const protectedEvents = ['blur', 'visibilitychange', 'keydown', 'keyup', 'contextmenu', 'dragstart'];
+    EventTarget.prototype.removeEventListener = function(type, listener, options) {
+      if (protectedEvents.includes(type) && (this === window || this === document || this === document.body)) {
+        logIntrusion("Event Listener Tamper Attempt", `Blocked unauthorized removal of '${type}' security shield listener`);
+        return; // Silently ignore removal attempt to keep security active
+      }
+      return _origRemoveListener.apply(this, arguments);
+    };
+
+    // Prevent overriding addEventListener or removeEventListener themselves
+    Object.freeze(EventTarget.prototype.removeEventListener);
+  } catch(e) {}
+
 })();
