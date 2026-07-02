@@ -28,7 +28,7 @@ class MapEngine {
     // Add custom zoom control to top-left
     L.control.zoom({ position: 'topleft' }).addTo(this.map);
 
-    // Setup Base Tile Layers (Google Maps XYZ tiles - No API Key Required for testing!)
+    // Setup Base Tile Layers
     this.baseLayers = {
       'Google Satellite': L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
         maxZoom: 20,
