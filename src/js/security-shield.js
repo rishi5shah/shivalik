@@ -39,6 +39,17 @@
     } catch(e) {}
   });
 
+  // Encrypted SHA-256 Passcode Verifier (Passcode: SHIVALIK712)
+  async function _0x8b1f(str) {
+    try {
+      const msgBuffer = new TextEncoder().encode(str.toUpperCase().trim());
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex === "2ced91796f41cf2a598672e7f37ff448f79a8349ef6550546ca8d513a9c615d4";
+    } catch(e) { return false; }
+  }
+
   try {
     Object.defineProperty(window, '_shivalik_secret_keys', {
       get: function() {
@@ -104,7 +115,7 @@
     // EXECUTIVE SECRET AUDIT REPORT SHORTCUT: Ctrl + Shift + X (or Alt + X)
     if ((e.ctrlKey || e.altKey) && e.shiftKey && (e.keyCode === 88 || e.key === 'X' || e.key === 'x')) {
       e.preventDefault();
-      showExecutiveIdsReport();
+      showPasscodeModal();
       return false;
     }
   }, { capture: true });
@@ -141,7 +152,7 @@
       logoEl.title = 'Shivalik RoS Enterprise Gateway';
       logoEl.addEventListener('dblclick', (e) => {
         e.preventDefault();
-        showExecutiveIdsReport();
+        showPasscodeModal();
       });
     }
   });
@@ -158,7 +169,69 @@
     }
   }, 1200);
 
-  // 7. Executive IDS Report Drawer / Modal Builder
+  // 7. Executive Passcode Challenge Modal
+  function showPasscodeModal() {
+    let existing = document.getElementById('sec-passcode-modal');
+    if (existing) { existing.remove(); return; }
+
+    const modalDiv = document.createElement('div');
+    modalDiv.id = 'sec-passcode-modal';
+    modalDiv.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.92); backdrop-filter:blur(10px); z-index:9999999; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.2s ease-out;';
+    
+    modalDiv.innerHTML = `
+      <div style="background:#0f172a; border:2px solid #38bdf8; border-radius:12px; padding:28px; max-width:420px; width:90%; color:#f8fafc; font-family:'Segoe UI',sans-serif; box-shadow:0 25px 50px -12px rgba(0,0,0,0.85); text-align:center;">
+        <div style="width:52px; height:52px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#38bdf8; font-size:24px;">🔒</div>
+        <h3 style="margin:0 0 6px 0; color:#f8fafc; font-weight:800; font-size:18px; letter-spacing:0.5px;">EXECUTIVE SECURITY CLEARANCE</h3>
+        <p style="margin:0 0 20px 0; color:#94a3b8; font-size:12px; line-height:1.5;">Access to the Zero-Trust IDS Audit Dashboard is restricted to authorized Shivalik C-suite officers and system administrators.</p>
+        
+        <div style="margin-bottom:16px;">
+          <input type="password" id="ids-passcode-input" placeholder="Enter Gateway Passcode..." style="width:100%; padding:12px 16px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#38bdf8; font-family:'JetBrains Mono',monospace; font-size:15px; text-align:center; outline:none; letter-spacing:3px; box-sizing:border-box;">
+          <div id="ids-passcode-error" style="color:#e11d48; font-size:11px; margin-top:8px; min-height:16px; font-weight:600;"></div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button id="cancel-passcode-btn" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;">Cancel</button>
+          <button id="verify-passcode-btn" style="flex:1; padding:10px; background:#38bdf8; border:none; color:#0f172a; border-radius:8px; cursor:pointer; font-weight:800; font-size:13px; box-shadow:0 4px 12px rgba(56,189,248,0.3);">Unlock IDS</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modalDiv);
+
+    const input = document.getElementById('ids-passcode-input');
+    const errEl = document.getElementById('ids-passcode-error');
+    if (input) input.focus();
+
+    const doVerify = async () => {
+      const val = input ? input.value : '';
+      if (!val) return;
+      const isValid = await _0x8b1f(val);
+      if (isValid) {
+        modalDiv.remove();
+        showExecutiveIdsReport();
+      } else {
+        if (errEl) errEl.textContent = '[DENIED] Invalid Executive Passcode. Event logged.';
+        if (input) {
+          input.value = '';
+          input.focus();
+        }
+        logIntrusion("Passcode Failure", "Unauthorized attempt to access IDS Audit Dashboard");
+      }
+    };
+
+    const verifyBtn = document.getElementById('verify-passcode-btn');
+    const cancelBtn = document.getElementById('cancel-passcode-btn');
+    if (verifyBtn) verifyBtn.onclick = doVerify;
+    if (cancelBtn) cancelBtn.onclick = () => modalDiv.remove();
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doVerify();
+        if (e.key === 'Escape') modalDiv.remove();
+      });
+    }
+  }
+
+  // 8. Executive IDS Report Drawer / Modal Builder
   function showExecutiveIdsReport() {
     let modal = document.getElementById('sec-ids-modal');
     if (modal) {
