@@ -310,4 +310,154 @@
   // Make executive report accessible globally for quick trigger
   window.showExecutiveIdsReport = showExecutiveIdsReport;
 
+  /* ==========================================================================
+     LAYER 8: ANTI-SCREENSHOT, ANTI-SNIP & MOBILE/TABLET CAPTURE ARMOR (v4.9)
+     ========================================================================== */
+  
+  // 8A. Dynamic Enterprise Traceability Watermark (Anti-Camera & Anti-Leak)
+  // Prevents IT team from taking untraceable photos from phones, tablets, or snip tools
+  function injectSecurityWatermark() {
+    if (document.getElementById('shivalik-sec-watermark')) return;
+    const wm = document.createElement('div');
+    wm.id = 'shivalik-sec-watermark';
+    wm.style.cssText = `
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      z-index: 999990;
+      pointer-events: none;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: space-around;
+      justify-content: space-around;
+      transform: rotate(-25deg);
+      opacity: 0.14;
+      user-select: none;
+      font-family: 'Segoe UI', monospace;
+      font-size: 14px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 2px;
+      overflow: hidden;
+    `;
+    const stampText = "SHIVALIK RoS • CONFIDENTIAL • DO NOT COPY • RESTRICTED ACCESS • ";
+    let content = "";
+    for (let i = 0; i < 120; i++) {
+      content += `<div style="margin: 30px 40px; white-space: nowrap;">${stampText}</div>`;
+    }
+    wm.innerHTML = content;
+    document.body.appendChild(wm);
+  }
+
+  // 8B. Anti-Snip Window Blur Shield (Triggers on Snipping Tool, App Switcher, Control Center)
+  let blurCurtain = null;
+  function triggerBlurLockdown(reason) {
+    if (!blurCurtain) {
+      blurCurtain = document.createElement('div');
+      blurCurtain.id = 'shivalik-blur-curtain';
+      blurCurtain.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: #0f172a;
+        z-index: 99999999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #e11d48;
+        font-family: 'Segoe UI', sans-serif;
+        text-align: center;
+        padding: 30px;
+        transition: opacity 0.2s ease;
+      `;
+      blurCurtain.innerHTML = `
+        <div style="font-size: 64px; margin-bottom: 20px;">🔒</div>
+        <h2 style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 12px;">SECURITY LOCKDOWN ENGAGED</h2>
+        <p style="font-size: 15px; color: #cbd5e1; max-width: 500px; line-height: 1.6; margin-bottom: 24px;">
+          Screen capture, Snipping Tool, background recording, and multitasking view capture are strictly prohibited by Shivalik RoS Enterprise Security Policy.
+        </p>
+        <div style="background: rgba(225,29,72,0.15); border: 1px solid #e11d48; color: #fda4af; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: bold;">
+          Return focus to window to resume session.
+        </div>
+      `;
+      document.body.appendChild(blurCurtain);
+    }
+    blurCurtain.style.display = 'flex';
+    const appEl = document.querySelector('.app-container');
+    if (appEl) appEl.style.filter = 'blur(35px) brightness(0.05)';
+    logIntrusion("Screen Capture / Focus Loss", reason || "Window backgrounded or Snipping Tool invoked");
+  }
+
+  function removeBlurLockdown() {
+    if (blurCurtain) blurCurtain.style.display = 'none';
+    const appEl = document.querySelector('.app-container');
+    if (appEl) appEl.style.filter = 'none';
+  }
+
+  window.addEventListener('blur', () => triggerBlurLockdown("Window Focus Lost (Snipping Tool / Multitasking)"));
+  window.addEventListener('focus', () => removeBlurLockdown());
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      triggerBlurLockdown("Tab Hidden / Screen Recorded");
+    } else {
+      removeBlurLockdown();
+    }
+  });
+
+  // 8C. Screenshot Keyboard Interceptor & Clipboard Wiper
+  function wipeClipboard() {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText('[SECURITY VIOLATION - SHIVALIK RoS CONTENT PROTECTED]');
+      }
+    } catch(e) {}
+  }
+
+  window.addEventListener('keyup', function(e) {
+    // PrintScreen key
+    if (e.keyCode === 44 || e.key === 'PrintScreen' || e.key === 'PrtScn') {
+      e.preventDefault();
+      wipeClipboard();
+      triggerBlurLockdown("PrintScreen Key Pressed");
+      setTimeout(removeBlurLockdown, 2500);
+      return false;
+    }
+  }, { capture: true });
+
+  window.addEventListener('keydown', function(e) {
+    // Win+Shift+S (Windows Snipping Tool) or Cmd+Shift+3/4/5 (Mac Screenshot)
+    if ((e.metaKey || e.key === 'Meta' || e.key === 'OS' || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S' || e.key === '3' || e.key === '4' || e.key === '5')) {
+      e.preventDefault();
+      wipeClipboard();
+      triggerBlurLockdown("OS Screenshot / Snipping Tool Shortcut");
+      setTimeout(removeBlurLockdown, 2500);
+      return false;
+    }
+    // Ctrl+P / Cmd+P (Print Page / Save as PDF)
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+      e.preventDefault();
+      logIntrusion("Print / PDF Export", "Attempted Ctrl+P Print Page");
+      return false;
+    }
+  }, { capture: true });
+
+  // 8D. CSS Print Protection
+  const printStyle = document.createElement('style');
+  printStyle.innerHTML = `
+    @media print {
+      html, body { display: none !important; opacity: 0 !important; visibility: hidden !important; }
+      * { display: none !important; }
+    }
+  `;
+  document.head.appendChild(printStyle);
+
+  // Initialize Watermark when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectSecurityWatermark);
+  } else {
+    injectSecurityWatermark();
+  }
+
 })();
