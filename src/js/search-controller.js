@@ -50,8 +50,12 @@ class SearchController {
 
       card.addEventListener('click', () => {
         if (window.mapEngine) {
-          window.mapEngine.zoomToCoordinates(scheme.center[0], scheme.center[1], scheme.zoom);
-          this.showToast(`Navigated to ${scheme.name}`);
+          if (typeof window.mapEngine.highlightTpScheme === 'function') {
+            window.mapEngine.highlightTpScheme(scheme.id);
+          } else {
+            window.mapEngine.zoomToCoordinates(scheme.center[0], scheme.center[1], scheme.zoom);
+            this.showToast(`Navigated to ${scheme.name}`);
+          }
         }
       });
 
@@ -79,6 +83,11 @@ class SearchController {
         );
 
         this.renderBookmarks(filteredSchemes);
+
+        // If exact or strong match for a single TP Scheme, automatically draw its boundary on map
+        if (filteredSchemes.length === 1 && query.length >= 2 && window.mapEngine && typeof window.mapEngine.highlightTpScheme === 'function') {
+          window.mapEngine.highlightTpScheme(filteredSchemes[0].id);
+        }
 
         // Check if query matches a Final Plot (FP) in loaded vector features
         if (window.loadedVectorFeatures) {

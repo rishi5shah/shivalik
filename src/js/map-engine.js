@@ -10,6 +10,7 @@ class MapEngine {
     this.wmsLayers = {};
     this.vectorLayer = null;
     this.activePlotLayer = null;
+    this.tpBoundaryLayer = null;
     this._gw = decodeURIComponent(atob("aHR0cHMlM0EvL3RwdmQub3BlbnBycC5pbi9nZW9zZXJ2ZXI="));
     this.wmsEndpoint = `${this._gw}/wms`;
   }
@@ -56,6 +57,13 @@ class MapEngine {
 
     // Load Live Government Vector Plots
     this.loadLiveGovernmentVectorPlots();
+
+    // Automatically highlight TP Scheme No. 50 boundary on initial startup for C-suite presentation
+    setTimeout(() => {
+      if (typeof this.highlightTpScheme === 'function') {
+        this.highlightTpScheme("AUDA_TP_50");
+      }
+    }, 1200);
 
     // Setup coordinate tracker on mouse move
     this.map.on('mousemove', (e) => {
@@ -268,6 +276,96 @@ class MapEngine {
     if (this.map) {
       this.map.setView([lat, lng], zoomLevel, { animate: true });
     }
+  }
+
+  highlightTpScheme(schemeId) {
+    if (!this.map || !window.audaPrimeSchemes) return;
+
+    // Remove old TP outer boundary if existing
+    this.clearTpBoundary();
+
+    const scheme = window.audaPrimeSchemes.find(s => s.id === schemeId || s.name.toLowerCase().includes(schemeId.toLowerCase()) || s.id.toLowerCase() === schemeId.toLowerCase());
+    if (!scheme || !scheme.boundary) {
+      if (scheme) this.zoomToCoordinates(scheme.center[0], scheme.center[1], scheme.zoom);
+      return;
+    }
+
+    const boundaryColor = scheme.color || '#38bdf8';
+
+    // Draw high-visibility outer TP Scheme boundary polygon
+    this.tpBoundaryLayer = L.polygon(scheme.boundary, {
+      color: boundaryColor,
+      weight: 4,
+      opacity: 1,
+      fillColor: boundaryColor,
+      fillOpacity: 0.18,
+      dashArray: '10, 6',
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(this.map);
+
+    // Bind permanent institutional badge popup/tooltip on boundary
+    this.tpBoundaryLayer.bindTooltip(`
+      <div style="background:#0f172a; border:2px solid ${boundaryColor}; color:#fff; padding:6px 12px; border-radius:6px; font-family:'Segoe UI',sans-serif; font-size:12px; font-weight:bold; box-shadow:0 10px 25px rgba(0,0,0,0.8); text-align:center;">
+        <span style="color:${boundaryColor}; font-size:13px;">🏛️ ${scheme.name}</span><br/>
+        <span style="color:#cbd5e1; font-size:11px; font-weight:normal;">Village: ${scheme.village} • Status: ${scheme.status}</span>
+      </div>
+    `, { permanent: true, direction: 'center', className: 'tp-boundary-label' });
+
+    // Fit map smoothly to the entire TP scheme boundary
+    this.map.fitBounds(this.tpBoundaryLayer.getBounds(), { padding: [60, 60], maxZoom: 16, animate: true });
+
+    // Show top floating glassmorphism banner for active TP jurisdiction
+    let banner = document.getElementById('tp-active-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'tp-active-banner';
+      banner.style.cssText = `
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.92);
+        border: 2px solid ${boundaryColor};
+        color: #fff;
+        padding: 8px 18px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 700;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      `;
+      const mapContainer = document.querySelector('.map-container') || document.body;
+      mapContainer.appendChild(banner);
+    } else {
+      banner.style.borderColor = boundaryColor;
+      banner.style.display = 'flex';
+    }
+
+    banner.innerHTML = `
+      <span style="color: ${boundaryColor}; font-size: 14px;">🏛️ Active Jurisdiction:</span>
+      <span style="color: #f8fafc;">${scheme.name}</span>
+      <button onclick="if(window.mapEngine) window.mapEngine.clearTpBoundary()" style="background: rgba(244,63,94,0.25); border: 1px solid #e11d48; color: #fff; padding: 3px 10px; border-radius: 14px; font-size: 11px; cursor: pointer; font-weight: bold; margin-left: 6px; transition: all 0.2s;">✕ Clear</button>
+    `;
+
+    // Show toast
+    if (window.searchController && typeof window.searchController.showToast === 'function') {
+      window.searchController.showToast(`[TP BOUNDARY] Displaying outer jurisdiction area for ${scheme.name}`);
+    }
+  }
+
+  clearTpBoundary() {
+    if (this.tpBoundaryLayer && this.map && this.map.hasLayer(this.tpBoundaryLayer)) {
+      this.map.removeLayer(this.tpBoundaryLayer);
+      this.tpBoundaryLayer = null;
+    }
+    const banner = document.getElementById('tp-active-banner');
+    if (banner) banner.style.display = 'none';
   }
 }
 
