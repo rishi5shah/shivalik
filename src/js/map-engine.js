@@ -246,25 +246,34 @@ class MapEngine {
   isPlotAvailableForSale(feature) {
     if (!feature || !feature.properties) return false;
     const props = feature.properties;
-    const fpNo = props.fp_no || props.fp_number || '0';
-    const status = props.status || '';
-    const zone = props.zone || '';
-    const areaSqm = Number(props.fp_area_final || props.fp_area || props.area_sqm || 3500);
+    const status = String(props.status || '').toUpperCase();
+    const zone = String(props.zone || props.zoning || props.zone_code || '').toUpperCase();
+    const remarks = String(props.remarks || props.remark || props.use_type || '').toUpperCase();
 
-    // 1. Government parks (POS), public utilities, and civic centers are NEVER available for sale
-    if (status.includes('Draft') || status.includes('POS') || zone.includes('POS') || zone.includes('Civic') || parseInt(fpNo) % 4 === 2 || parseInt(fpNo) % 4 === 3) {
+    // 1. Strictly exclude Government/Municipal reserves, Public Open Spaces (POS), civic utility centers, public gardens/parks, municipal schools, water bodies, and road reserves
+    if (
+      status.includes('DRAFT') ||
+      status.includes('POS') ||
+      zone.includes('POS') ||
+      zone.includes('CIVIC') ||
+      zone.includes('PARK') ||
+      zone.includes('GARDEN') ||
+      zone.includes('SCHOOL') ||
+      zone.includes('UTILITY') ||
+      zone.includes('WATER') ||
+      zone.includes('LAKE') ||
+      zone.includes('ROAD') ||
+      zone.includes('RESERVE') ||
+      remarks.includes('GOVT') ||
+      remarks.includes('MUNICIPAL') ||
+      remarks.includes('PUBLIC') ||
+      remarks.includes('OPEN SPACE')
+    ) {
       return false;
     }
 
-    // 2. Small fragmented plots (< 1,200 m²) do not meet institutional underwriting for Shivalik high-rise towers
-    if (areaSqm < 1200) {
-      return false;
-    }
-
-    // 3. Filter out already-sold land & built-up societies; retain only the verified prime acquirable vacant parcels
-    const fpNum = parseInt(fpNo) || 10;
-    const availabilityHash = (fpNum * 37 + Math.floor(areaSqm)) % 100;
-    return availabilityHash < 35; // Retains exactly the ~35% prime institutional parcels available for acquisition
+    // 2. All legitimate private residential, commercial, and mixed-use Final Plots (FPs) in AUDA Town Planning Schemes are available for institutional acquisition & underwriting!
+    return true;
   }
 
   async loadLiveGovernmentVectorPlots() {
@@ -274,7 +283,7 @@ class MapEngine {
       }
 
       // Fetch real live official Town Planning Plots across the entire AUDA Growth Corridor (Shela, Shilaj, Bodakdev, Thaltej, Ambli)
-      const url = `${this._gw}/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=2500&srsName=EPSG:4326&bbox=72.40,22.95,72.68,23.18,EPSG:4326`;
+      const url = `${this._gw}/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=5000&srsName=EPSG:4326&bbox=72.40,22.95,72.68,23.18,EPSG:4326`;
       const response = await fetch(url);
       const geojsonData = await response.json();
 
@@ -394,7 +403,7 @@ class MapEngine {
       }
 
       const bbox = `${minLng},${minLat},${maxLng},${maxLat},EPSG:4326`;
-      const url = `${this._gw}/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=1500&srsName=EPSG:4326&bbox=${bbox}`;
+      const url = `${this._gw}/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=3000&srsName=EPSG:4326&bbox=${bbox}`;
       const response = await fetch(url);
       const geojsonData = await response.json();
 
