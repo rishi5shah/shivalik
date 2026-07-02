@@ -36,6 +36,7 @@ class SearchController {
     schemes.forEach(scheme => {
       const card = document.createElement('div');
       card.className = 'bookmark-card';
+      card.setAttribute('data-tp-id', scheme.id);
       card.innerHTML = `
         <div class="bookmark-title">
           <span>${scheme.name}</span>
@@ -61,6 +62,39 @@ class SearchController {
 
       this.bookmarksContainer.appendChild(card);
     });
+  }
+
+  highlightActiveCard(schemeId) {
+    if (!this.bookmarksContainer) return;
+    const allCards = this.bookmarksContainer.querySelectorAll('.bookmark-card');
+    allCards.forEach(card => {
+      card.classList.remove('active-tp-card');
+      card.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+      card.style.background = 'var(--bg-tertiary)';
+      card.style.boxShadow = 'none';
+      const badge = card.querySelector('.selected-tp-badge');
+      if (badge) badge.remove();
+    });
+
+    if (!schemeId) return;
+
+    const activeCard = this.bookmarksContainer.querySelector(`.bookmark-card[data-tp-id="${schemeId}"]`);
+    if (activeCard) {
+      activeCard.classList.add('active-tp-card');
+      activeCard.style.border = '2px solid #38bdf8';
+      activeCard.style.background = 'rgba(56, 189, 248, 0.18)';
+      activeCard.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.4)';
+      
+      const titleEl = activeCard.querySelector('.bookmark-title');
+      if (titleEl && !activeCard.querySelector('.selected-tp-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'selected-tp-badge';
+        badge.style.cssText = 'background:#38bdf8; color:#0f172a; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; margin-left:8px; text-transform:uppercase; letter-spacing:0.5px;';
+        badge.textContent = '● SELECTED';
+        titleEl.appendChild(badge);
+      }
+      activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
 
   setupEventListeners() {

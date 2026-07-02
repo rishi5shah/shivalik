@@ -353,6 +353,11 @@ class MapEngine {
       <button onclick="if(window.mapEngine) window.mapEngine.clearTpBoundary()" style="background: rgba(244,63,94,0.25); border: 1px solid #e11d48; color: #fff; padding: 3px 10px; border-radius: 14px; font-size: 11px; cursor: pointer; font-weight: bold; margin-left: 6px; transition: all 0.2s;">✕ Clear</button>
     `;
 
+    // Highlight active card in sidebar bookmarks list
+    if (window.searchController && typeof window.searchController.highlightActiveCard === 'function') {
+      window.searchController.highlightActiveCard(scheme.id);
+    }
+
     // Show toast
     if (window.searchController && typeof window.searchController.showToast === 'function') {
       window.searchController.showToast(`[TP BOUNDARY] Displaying outer jurisdiction area for ${scheme.name}`);
@@ -366,6 +371,9 @@ class MapEngine {
     }
     const banner = document.getElementById('tp-active-banner');
     if (banner) banner.style.display = 'none';
+    if (window.searchController && typeof window.searchController.highlightActiveCard === 'function') {
+      window.searchController.highlightActiveCard(null);
+    }
   }
 }
 
