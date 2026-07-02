@@ -52,18 +52,35 @@ class MapEngine {
     // Set default base layer
     this.baseLayers['Google Satellite'].addTo(this.map);
 
+    // Fix: Ensure Leaflet viewport container dimensions are immediately calculated so map tiles render without requiring a zoom
+    const invalidate = () => { if (this.map) { this.map.invalidateSize(); } };
+    setTimeout(invalidate, 50);
+    setTimeout(invalidate, 250);
+    setTimeout(invalidate, 600);
+    setTimeout(invalidate, 1200);
+
+    const mapEl = document.getElementById('map');
+    if (mapEl && typeof ResizeObserver !== 'undefined') {
+      this._resizeObserver = new ResizeObserver(() => {
+        window.requestAnimationFrame(() => invalidate());
+      });
+      this._resizeObserver.observe(mapEl);
+    }
+
     // Initialize WMS Layers
     this.setupWmsLayers();
 
-    // Load Live Government Vector Plots
-    this.loadLiveGovernmentVectorPlots();
-
-    // Automatically highlight TP Scheme No. 50 boundary on initial startup for C-suite presentation
+    // Automatically highlight TP Scheme No. 50 boundary on initial startup for C-suite presentation (fast 350ms startup)
     setTimeout(() => {
       if (typeof this.highlightTpScheme === 'function') {
         this.highlightTpScheme("AUDA_TP_50");
       }
-    }, 1200);
+    }, 350);
+
+    // Defer heavy corridor-wide background WFS vector plot loading by 3 seconds so initial map and TP 50 load instantly!
+    setTimeout(() => {
+      this.loadLiveGovernmentVectorPlots();
+    }, 3000);
 
     // Setup coordinate tracker on mouse move
     this.map.on('mousemove', (e) => {
@@ -129,12 +146,12 @@ class MapEngine {
 
     // Define AUDA / Gujarat TP layers discovered from GeoServer
     const layerConfigs = [
-      { id: 'fp_boundary', name: 'ctp:final_plot_boundary', defaultVisible: true, opacity: 0.8 },
+      { id: 'fp_boundary', name: 'ctp:final_plot_boundary', defaultVisible: false, opacity: 0.8 },
       { id: 'op_boundary', name: 'ctp:original_plot_boundary', defaultVisible: false, opacity: 0.6 },
       { id: 'tp_roads', name: 'ctp:road', defaultVisible: true, opacity: 0.75 },
-      { id: 'dp_reservations', name: 'ctp:dp_reservation_line', defaultVisible: true, opacity: 0.7 },
+      { id: 'dp_reservations', name: 'ctp:dp_reservation_line', defaultVisible: false, opacity: 0.7 },
       { id: 'revenue_survey', name: 'ctp:survey_line', defaultVisible: false, opacity: 0.6 },
-      { id: 'ongc_pipeline', name: 'ctp:ongc_pipeline', defaultVisible: true, opacity: 0.9 },
+      { id: 'ongc_pipeline', name: 'ctp:ongc_pipeline', defaultVisible: false, opacity: 0.9 },
       { id: 'ht_line', name: 'ctp:ht_line', defaultVisible: false, opacity: 0.8 }
     ];
 
