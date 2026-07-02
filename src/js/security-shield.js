@@ -485,7 +485,7 @@
   try {
     const _origFetch = window.fetch;
     window.fetch = function(url, options) {
-      if (typeof url === 'string' && !url.includes('cartocdn.com') && !url.includes('openstreetmap.org') && !url.includes('google') && !url.includes(window.location.host) && !url.startsWith('/') && !url.startsWith('.')) {
+      if (typeof url === 'string' && !url.includes('cartocdn.com') && !url.includes('openstreetmap.org') && !url.includes('google') && !url.includes('openprp.in') && !url.includes(window.location.host) && !url.startsWith('/') && !url.startsWith('.')) {
         logIntrusion("Outbound Exfiltration Blocked", `Prevented unauthorized data transmission to external host: ${url.substring(0, 40)}...`);
         return Promise.reject(new Error("[SECURITY SHIELD] Outbound data exfiltration strictly blocked by institutional firewall."));
       }
@@ -495,7 +495,7 @@
     if (window.XMLHttpRequest) {
       const _origOpen = XMLHttpRequest.prototype.open;
       XMLHttpRequest.prototype.open = function(method, url) {
-        if (typeof url === 'string' && !url.includes('cartocdn.com') && !url.includes('openstreetmap.org') && !url.includes('google') && !url.includes(window.location.host) && !url.startsWith('/') && !url.startsWith('.')) {
+        if (typeof url === 'string' && !url.includes('cartocdn.com') && !url.includes('openstreetmap.org') && !url.includes('google') && !url.includes('openprp.in') && !url.includes(window.location.host) && !url.startsWith('/') && !url.startsWith('.')) {
           logIntrusion("Outbound XHR Exfiltration Blocked", `Prevented unauthorized XHR request to: ${url.substring(0, 40)}...`);
           throw new Error("[SECURITY SHIELD] Outbound XHR data exfiltration strictly blocked.");
         }
