@@ -499,14 +499,6 @@ class MapEngine {
     // Render 100% verified road-clear Town Planning Final Plots inside this boundary
     this.renderVerifiedGovernmentPlotsInsideScheme(scheme);
 
-    // Bind permanent institutional badge popup/tooltip on boundary
-    this.tpBoundaryLayer.bindTooltip(`
-      <div style="background:#0f172a; border:2px solid ${boundaryColor}; color:#fff; padding:6px 12px; border-radius:6px; font-family:'Segoe UI',sans-serif; font-size:12px; font-weight:bold; box-shadow:0 10px 25px rgba(0,0,0,0.8); text-align:center;">
-        <span style="color:${boundaryColor}; font-size:13px;">🏛️ ${scheme.name}</span><br/>
-        <span style="color:#cbd5e1; font-size:11px; font-weight:normal;">Village: ${scheme.village} • Status: ${scheme.status}</span>
-      </div>
-    `, { permanent: true, direction: 'center', className: 'tp-boundary-label' });
-
     // Fit map smoothly to the entire TP scheme boundary
     this.map.fitBounds(this.tpBoundaryLayer.getBounds(), { padding: [60, 60], maxZoom: 16, animate: true });
 
