@@ -597,22 +597,22 @@ input:checked + .slider:before {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Coordinate Footer Overlay */
+/* Coordinate Footer Overlay (Bottom Left) */
 .map-coords-bar {
   position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 16px;
+  left: 16px;
+  transform: none;
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
-  padding: 8px 20px;
-  border-radius: 30px;
+  padding: 6px 16px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
   z-index: 400;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
@@ -621,6 +621,50 @@ input:checked + .slider:before {
 .coord-value {
   color: var(--accent-cyan);
   font-weight: 600;
+}
+
+/* Plot Zoning Bifurcation Legend Bar (Bottom Center) */
+.plot-legend-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 20px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: #cbd5e1;
+  z-index: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+  max-width: 90%;
+  overflow-x: auto;
+}
+
+.legend-title {
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
 }
 
 /* Plot Intelligence Due Diligence Drawer (Right Sidebar) */
@@ -1352,4 +1396,14 @@ input:checked + .slider:before {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.05); opacity: 0.85; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .plot-legend-bar {
+    bottom: 40px;
+    padding: 4px 12px;
+    font-size: 10px;
+    gap: 8px;
+    max-width: 95%;
+  }
 }

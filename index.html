@@ -9,10 +9,10 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   
   <!-- Custom Vanilla Styles -->
-  <link rel="stylesheet" href="src/css/styles.css?v=5.2">
+  <link rel="stylesheet" href="src/css/styles.css?v=5.3">
   
   <!-- Enterprise Security Shield (Anti-DevTools & Anti-Reverse Engineering) -->
-  <script src="src/js/security-shield.js?v=5.2"></script>
+  <script src="src/js/security-shield.js?v=5.3"></script>
 </head>
 <body>
   <div class="app-container">
@@ -203,7 +203,16 @@
           <button class="toolbar-btn" data-base="Dark GIS Theme">Dark GIS Theme</button>
         </div>
 
-        <!-- Coords Footer Bar -->
+        <!-- Plot Zoning Bifurcation Legend Bar (Bottom Center) -->
+        <div class="plot-legend-bar">
+          <span class="legend-title">🏛️ Plot Zoning Bifurcation:</span>
+          <div class="legend-item"><span class="legend-dot" style="background: #38bdf8; box-shadow: 0 0 8px #38bdf8;"></span><span><strong>TOZ</strong> (Commercial)</span></div>
+          <div class="legend-item"><span class="legend-dot" style="background: #3b82f6; box-shadow: 0 0 8px #3b82f6;"></span><span><strong>R1</strong> (Residential)</span></div>
+          <div class="legend-item"><span class="legend-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span><span><strong>POS</strong> (Park / Green)</span></div>
+          <div class="legend-item"><span class="legend-dot" style="background: #f59e0b; box-shadow: 0 0 8px #f59e0b;"></span><span><strong>Civic</strong> (Public Purpose)</span></div>
+        </div>
+
+        <!-- Coords Footer Bar (Bottom Left) -->
         <div class="map-coords-bar">
           <span>CRS: <strong style="color: #fff;">EPSG:4326 / 3857</strong></span>
           <span>•</span>
@@ -508,11 +517,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
   <!-- App JS Controllers -->
-  <script src="src/js/auda-data.js?v=5.2"></script>
-  <script src="src/js/map-engine.js?v=5.2"></script>
-  <script src="src/js/search-controller.js?v=5.2"></script>
-  <script src="src/js/due-diligence.js?v=5.2"></script>
-  <script src="src/js/pipeline-modal.js?v=5.2"></script>
-  <script src="src/js/app.js?v=5.2"></script>
+  <script src="src/js/auda-data.js?v=5.3"></script>
+  <script src="src/js/map-engine.js?v=5.3"></script>
+  <script src="src/js/search-controller.js?v=5.3"></script>
+  <script src="src/js/due-diligence.js?v=5.3"></script>
+  <script src="src/js/pipeline-modal.js?v=5.3"></script>
+  <script src="src/js/app.js?v=5.3"></script>
 </body>
 </html>

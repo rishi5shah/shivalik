@@ -463,12 +463,13 @@ class MapEngine {
       banner.id = 'tp-active-banner';
       banner.style.cssText = `
         position: absolute;
-        top: 16px;
-        left: 55px;
+        bottom: 68px;
+        left: 50%;
+        transform: translateX(-50%);
         background: rgba(15, 23, 42, 0.94);
         border: 1px solid ${boundaryColor};
         color: #fff;
-        padding: 6px 16px;
+        padding: 6px 18px;
         border-radius: 24px;
         font-family: 'Outfit', sans-serif;
         font-size: 13px;
@@ -481,7 +482,7 @@ class MapEngine {
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         white-space: nowrap;
-        max-width: calc(100% - 440px);
+        max-width: 90%;
         overflow: hidden;
         transition: all 0.3s ease;
       `;
