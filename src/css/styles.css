@@ -1136,3 +1136,188 @@ input:checked + .slider:before {
 .tour-stop-btn:hover {
   background: var(--accent-rose);
 }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (TABLETS & MOBILE PHONES) - v4.7
+   ========================================================================== */
+
+/* Tablet & iPad Pro Styles (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .app-header {
+    padding: 0 16px;
+  }
+  .sidebar-panel {
+    width: 260px;
+  }
+  .search-input {
+    width: 220px !important;
+  }
+  .map-toolbar {
+    top: 10px;
+    right: 10px;
+  }
+  .toolbar-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .intelligence-drawer {
+    width: 380px;
+  }
+}
+
+/* Mobile Phones & Compact Viewport Styles (max-width: 768px) */
+@media (max-width: 768px) {
+  body, html {
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+  .app-container {
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  /* Header adjustments */
+  .app-header {
+    height: auto;
+    min-height: 58px;
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .brand-section {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .logo-text {
+    font-size: 15px;
+  }
+  .portal-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  .header-controls {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .search-container {
+    flex: 1;
+  }
+  .search-input {
+    width: 100% !important;
+    font-size: 12px;
+  }
+  .btn-pipeline {
+    padding: 6px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* Main Workspace Vertical Stacking */
+  .main-workspace {
+    flex-direction: column;
+    height: calc(100vh - 100px);
+  }
+  
+  /* Left Sidebar converts to bottom scrollable panel */
+  .sidebar-panel {
+    width: 100%;
+    height: 38%;
+    max-height: 260px;
+    border-right: none;
+    border-top: 1px solid var(--border-light);
+    order: 2;
+  }
+  
+  /* Map Viewport takes top prominence */
+  .map-container {
+    width: 100%;
+    flex: 1;
+    min-height: 50%;
+    order: 1;
+  }
+
+  /* Map Toolbar Controls */
+  .map-toolbar {
+    top: 10px;
+    left: 10px;
+    right: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 90%;
+  }
+  .toolbar-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  /* Map Coords Footer Bar */
+  .map-coords-bar {
+    font-size: 10px;
+    padding: 4px 8px;
+    flex-wrap: wrap;
+    gap: 4px;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    max-width: calc(100% - 10px);
+  }
+
+  /* Due Diligence Drawer (Right Sidebar) becomes Full Screen Mobile Sheet */
+  .intelligence-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    right: -100vw;
+    top: 0;
+    height: 100vh;
+    z-index: 999999;
+  }
+  .intelligence-drawer.open {
+    right: 0 !important;
+  }
+
+  /* Modals (Pipeline Board, IDS Dashboard, etc.) */
+  .modal-content {
+    width: 96% !important;
+    max-width: 96% !important;
+    max-height: 90vh;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .pipeline-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .kanban-column {
+    min-width: 100%;
+  }
+
+  /* Toast Notifications on mobile */
+  .toast-notification {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    width: auto !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Small Phones (< 480px) */
+@media (max-width: 480px) {
+  .brand-logo {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+  }
+  .logo-text {
+    font-size: 13px;
+  }
+  .map-coords-bar {
+    display: none;
+  }
+}
