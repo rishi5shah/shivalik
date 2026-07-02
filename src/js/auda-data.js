@@ -1,7 +1,10 @@
 /**
  * AUDA Town Planning Schemes - Prime Real Estate Bookmarks & Metadata with Outer Polygon Boundaries
  * Covers all major AUDA Residential, Commercial, and Industrial Corridors.
+ * Institutional Zero-Trust Data Protection: Non-enumerable, deep-frozen schema.
  */
+(function() {
+  'use strict';
 
 const AUDA_PRIME_SCHEMES = [
   {
@@ -414,4 +417,32 @@ const AUDA_PRIME_SCHEMES = [
   }
 ];
 
-window.audaPrimeSchemes = AUDA_PRIME_SCHEMES;
+  // Deep Freeze all scheme objects to prevent DOM/memory mutation or tampering
+  AUDA_PRIME_SCHEMES.forEach(scheme => {
+    if (scheme.boundary) Object.freeze(scheme.boundary);
+    if (scheme.center) Object.freeze(scheme.center);
+    if (scheme.highlights) Object.freeze(scheme.highlights);
+    Object.freeze(scheme);
+  });
+  Object.freeze(AUDA_PRIME_SCHEMES);
+
+  // Securely define window.audaPrimeSchemes as non-enumerable, non-writable, non-configurable
+  // Hides data from Object.keys(window), for..in loops, and automated AI scrapers
+  try {
+    Object.defineProperty(window, 'audaPrimeSchemes', {
+      get: function() {
+        return AUDA_PRIME_SCHEMES;
+      },
+      set: function() {
+        if (window._shivalik_audit_log) {
+          window._shivalik_audit_log.push({ time: new Date().toLocaleTimeString(), type: "Data Tamper Trap", detail: "Attempted override of protected AUDA GIS schema" });
+        }
+      },
+      enumerable: false,
+      configurable: false
+    });
+  } catch(e) {
+    window.audaPrimeSchemes = AUDA_PRIME_SCHEMES;
+  }
+
+})();

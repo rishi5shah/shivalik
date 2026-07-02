@@ -377,5 +377,15 @@ class MapEngine {
   }
 }
 
-window.mapEngine = new MapEngine();
+try {
+  const _mapInstance = new MapEngine();
+  Object.defineProperty(window, 'mapEngine', {
+    get: function() { return _mapInstance; },
+    set: function() { console.warn("[SECURITY VIOLATION] Protected map engine cannot be overridden."); },
+    enumerable: false,
+    configurable: false
+  });
+} catch(e) {
+  window.mapEngine = new MapEngine();
+}
 

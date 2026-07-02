@@ -420,40 +420,78 @@
     </main>
   </div>
 
-  <!-- Modal 1: Shivalik RoS Deal Pipeline CRM Board -->
-  <div id="pipeline-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 1050px; width: 95%;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div>
-            <h2 style="margin: 0; font-weight:800;">Shivalik RoS Deal Pipeline & Acquisition Board</h2>
-            <span style="font-size: 12px; color: var(--accent-cyan); font-weight:600;">Active Land Acquisition & Title Due Diligence Portfolio</span>
-          </div>
+    <!-- Due Diligence Modal -->
+    <div id="modal-due-diligence" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⚡ Shivalik Automated Real Estate Due Diligence</h2>
+          <button class="close-modal">✕</button>
         </div>
-        <button id="close-pipeline-btn" class="close-btn">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.08);">
-          <div>
-            <span style="color: var(--text-secondary); font-size: 13px;">Total Pipeline Land Value:</span>
-            <strong style="color: var(--accent-emerald); font-size: 22px; margin-left: 8px;" id="pipeline-total-value">₹533.45 Cr</strong>
+        <div class="modal-body">
+          <p class="modal-desc">Select an AUDA Town Planning Scheme or input coordinates to initiate instant AI-driven title verification, GDCR zoning compliance, and FSI valuation simulation.</p>
+          
+          <div class="form-group">
+            <label>Select Target Jurisdiction:</label>
+            <select id="dd-scheme-select" class="form-select">
+              <option value="AUDA_TP_50">TP Scheme No. 50 (Bodakdev - Sindhu Bhavan Road)</option>
+              <option value="AUDA_TP_61">TP Scheme No. 61 (Shilaj - Arterial Corridor)</option>
+              <option value="AUDA_TP_01_SHELA">TP Scheme No. 1 (Shela Town Center)</option>
+              <option value="AUDA_TP_40_THALTEJ">TP Scheme No. 40 (Thaltej - Hebatpur)</option>
+              <option value="AUDA_TP_02_BOPAL">TP Scheme No. 2 (Bopal South - Ghuma)</option>
+              <option value="AUDA_TP_62_OGNAJ">TP Scheme No. 62 (Ognaj - Gota Ring Road)</option>
+            </select>
           </div>
-          <div style="font-size: 12px; color: var(--accent-emerald); font-weight:700;">
-            [SYNCED] Real-Time Connection with PostGIS & Legal Database
-          </div>
-        </div>
 
-        <div style="overflow-x: auto;">
+          <div class="form-group">
+            <label>Simulation Parameters:</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" checked> Title & Revenue Record Check (7/12 & 8-A Verify)</label>
+              <label><input type="checkbox" checked> FSI Optimization & Premium Calculation</label>
+              <label><input type="checkbox" checked> Environmental & Metro Buffer Setback Audit</label>
+            </div>
+          </div>
+
+          <div id="dd-progress-container" class="progress-container hidden">
+            <div class="progress-label">Running Algorithmic Title Audit... <span id="dd-progress-pct">0%</span></div>
+            <div class="progress-bar"><div id="dd-progress-fill" class="progress-fill"></div></div>
+            <div id="dd-log" class="console-log"></div>
+          </div>
+
+          <div id="dd-results" class="results-container hidden">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-run-dd-start" class="action-btn primary">Execute Due Diligence</button>
+          <button class="action-btn secondary close-modal">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Modal -->
+    <div id="modal-pipeline" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content large">
+        <div class="modal-header">
+          <h2>📊 Shivalik Acquisition Pipeline & Financial Dossier</h2>
+          <button class="close-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="pipeline-stats">
+            <div class="p-stat"><span>Total Deals:</span> <strong>4 Plots</strong></div>
+            <div class="p-stat"><span>Total Land Area:</span> <strong>28,400 Sq.m</strong></div>
+            <div class="p-stat"><span>Est. Acquisition Value:</span> <strong class="text-emerald">₹312.50 Cr</strong></div>
+          </div>
+
           <table class="pipeline-table">
             <thead>
               <tr>
-                <th>Deal ID</th>
-                <th>Plot (FP No)</th>
-                <th>AUDA TP Scheme</th>
-                <th>Area (m²)</th>
-                <th>Tenure</th>
-                <th>Est. Land Value</th>
-                <th>Acquisition Stage</th>
+                <th>Plot / Scheme</th>
+                <th>Location</th>
+                <th>Zoning & Max FSI</th>
+                <th>Est. Valuation</th>
+                <th>Stage</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -470,11 +508,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
   <!-- App JS Controllers -->
-  <script src="src/js/auda-data.js?v=4.9"></script>
-  <script src="src/js/map-engine.js?v=4.9"></script>
-  <script src="src/js/search-controller.js?v=4.9"></script>
-  <script src="src/js/due-diligence.js?v=4.9"></script>
-  <script src="src/js/pipeline-modal.js?v=4.9"></script>
-  <script src="src/js/app.js?v=4.9"></script>
+  <script src="src/js/auda-data.js?v=5.0"></script>
+  <script src="src/js/map-engine.js?v=5.0"></script>
+  <script src="src/js/search-controller.js?v=5.0"></script>
+  <script src="src/js/due-diligence.js?v=5.0"></script>
+  <script src="src/js/pipeline-modal.js?v=5.0"></script>
+  <script src="src/js/app.js?v=5.0"></script>
 </body>
 </html>

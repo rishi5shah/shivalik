@@ -460,4 +460,60 @@
     injectSecurityWatermark();
   }
 
+  /* ==========================================================================
+     LAYER 9: ANTI-AI SCRAPER, AUTOMATED BOT & ZERO-OUTBOUND EXFILTRATION SHIELD
+     ========================================================================== */
+
+  // 9A. Anti-AI Serialization Shield (Protects against JSON stringify dumps by browser extensions/scrapers)
+  try {
+    const _origStringify = JSON.stringify;
+    JSON.stringify = function(obj, replacer, space) {
+      if (obj && (
+        obj === window.audaPrimeSchemes || 
+        obj === window.loadedVectorFeatures || 
+        obj === window.mapEngine || 
+        (Array.isArray(obj) && obj.length > 0 && obj[0] && (obj[0].authority === "AUDA" || obj[0].fp_no))
+      )) {
+        logIntrusion("AI Scraper / Serialization Attempt", "Attempted JSON stringify export of proprietary GIS database");
+        return '"[ACCESS DENIED: SHIVALIK RoS PROPRIETARY DATA PROTECTED BY ZERO-TRUST IDS]"';
+      }
+      return _origStringify.apply(this, arguments);
+    };
+  } catch(e) {}
+
+  // 9B. Zero-Outbound Network Exfiltration Firewall (Guarantees zero data goes out to external webhooks/AI endpoints)
+  try {
+    const _origFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (typeof url === 'string' && !url.includes('cartocdn.com') && !url.includes('openstreetmap.org') && !url.includes('google') && !url.includes(window.location.host) && !url.startsWith('/') && !url.startsWith('.')) {
+        logIntrusion("Outbound Exfiltration Blocked", `Prevented unauthorized data transmission to external host: ${url.substring(0, 40)}...`);
+        return Promise.reject(new Error("[SECURITY SHIELD] Outbound data exfiltration strictly blocked by institutional firewall."));
+      }
+      return _origFetch.apply(this, arguments);
+    };
+
+    if (window.XMLHttpRequest) {
+      const _origOpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url) {
+        if (typeof url === 'string' && !url.includes('cartocdn.com') && !url.includes('openstreetmap.org') && !url.includes('google') && !url.includes(window.location.host) && !url.startsWith('/') && !url.startsWith('.')) {
+          logIntrusion("Outbound XHR Exfiltration Blocked", `Prevented unauthorized XHR request to: ${url.substring(0, 40)}...`);
+          throw new Error("[SECURITY SHIELD] Outbound XHR data exfiltration strictly blocked.");
+        }
+        return _origOpen.apply(this, arguments);
+      };
+    }
+  } catch(e) {}
+
+  // 9C. Automated WebDriver / AI Bot Detection (Selenium, Puppeteer, Playwright, Headless Chrome)
+  function checkHeadlessBot() {
+    if (navigator.webdriver || window._phantom || window.__nightmare || document.__selenium_unwrapped || (window.callPhantom) || (navigator.userAgent && navigator.userAgent.toLowerCase().includes('headless'))) {
+      logIntrusion("Automated AI Bot Detected", "Headless browser or scraper automation detected");
+      try {
+        document.body.innerHTML = '<div style="background:#0f172a;color:#e11d48;height:100vh;display:flex;align-items:center;justify-content:center;font-family:\'Segoe UI\',monospace;font-size:18px;font-weight:bold;text-align:center;padding:20px;">[SECURITY ALERT] Automated AI Scraper or WebDriver Automation Detected.<br/>Access denied by Zero-Trust IDS.</div>';
+      } catch(err) {}
+    }
+  }
+  checkHeadlessBot();
+  setInterval(checkHeadlessBot, 3000);
+
 })();

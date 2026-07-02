@@ -230,4 +230,14 @@ class SearchController {
   }
 }
 
-window.searchController = new SearchController();
+try {
+  const _searchInstance = new SearchController();
+  Object.defineProperty(window, 'searchController', {
+    get: function() { return _searchInstance; },
+    set: function() { console.warn("[SECURITY VIOLATION] Protected search controller cannot be overridden."); },
+    enumerable: false,
+    configurable: false
+  });
+} catch(e) {
+  window.searchController = new SearchController();
+}
