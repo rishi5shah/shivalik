@@ -463,35 +463,40 @@ class MapEngine {
       banner.id = 'tp-active-banner';
       banner.style.cssText = `
         position: absolute;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(15, 23, 42, 0.92);
-        border: 2px solid ${boundaryColor};
+        top: 16px;
+        left: 55px;
+        background: rgba(15, 23, 42, 0.94);
+        border: 1px solid ${boundaryColor};
         color: #fff;
-        padding: 8px 18px;
-        border-radius: 30px;
+        padding: 6px 16px;
+        border-radius: 24px;
+        font-family: 'Outfit', sans-serif;
         font-size: 13px;
-        font-weight: 700;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-        z-index: 2000;
+        font-weight: 600;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.7), 0 0 15px ${boundaryColor}22;
+        z-index: 1000;
         display: flex;
         align-items: center;
-        gap: 12px;
-        backdrop-filter: blur(10px);
+        gap: 8px;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        white-space: nowrap;
+        max-width: calc(100% - 440px);
+        overflow: hidden;
         transition: all 0.3s ease;
       `;
       const mapContainer = document.querySelector('.map-container') || document.body;
       mapContainer.appendChild(banner);
     } else {
       banner.style.borderColor = boundaryColor;
+      banner.style.boxShadow = `0 10px 25px rgba(0,0,0,0.7), 0 0 15px ${boundaryColor}22`;
       banner.style.display = 'flex';
     }
 
     banner.innerHTML = `
-      <span style="color: ${boundaryColor}; font-size: 14px;">🏛️ Active Jurisdiction:</span>
-      <span style="color: #f8fafc;">${scheme.name}</span>
-      <button onclick="if(window.mapEngine) window.mapEngine.clearTpBoundary()" style="background: rgba(244,63,94,0.25); border: 1px solid #e11d48; color: #fff; padding: 3px 10px; border-radius: 14px; font-size: 11px; cursor: pointer; font-weight: bold; margin-left: 6px; transition: all 0.2s;">✕ Clear</button>
+      <span style="color: ${boundaryColor}; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-shrink: 0;">🏛️ Active Jurisdiction:</span>
+      <span style="color: #f8fafc; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${scheme.name}</span>
+      <button onclick="if(window.mapEngine) window.mapEngine.clearTpBoundary()" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.5); color: #fda4af; padding: 3px 12px; border-radius: 16px; font-size: 11px; cursor: pointer; font-weight: 600; margin-left: 6px; white-space: nowrap; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">✕ Clear</button>
     `;
 
     // Highlight active card in sidebar bookmarks list
