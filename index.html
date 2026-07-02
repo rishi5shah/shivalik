@@ -9,10 +9,10 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   
   <!-- Custom Vanilla Styles -->
-  <link rel="stylesheet" href="src/css/styles.css?v=4.3">
+  <link rel="stylesheet" href="src/css/styles.css?v=4.4">
   
   <!-- Enterprise Security Shield (Anti-DevTools & Anti-Reverse Engineering) -->
-  <script src="src/js/security-shield.js?v=4.3"></script>
+  <script src="src/js/security-shield.js?v=4.4"></script>
 </head>
 <body>
   <div class="app-container">
@@ -36,10 +36,7 @@
           <input type="text" id="global-search" class="search-input" placeholder="Search TP Scheme, FP No, or Village...">
           <span class="search-icon" style="font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">/</span>
         </div>
-        <button id="auto-tour-btn" class="btn btn-tour">Auto-Tour Presentation</button>
         <button id="open-pipeline-btn" class="btn btn-pipeline">Deal Pipeline <span id="pipeline-count" class="pipeline-badge-count">3</span></button>
-        <button id="open-wfs-btn" class="btn btn-gold">WFS Data Harvester</button>
-        <button id="open-guide-btn" class="btn btn-glass">System Setup Guide</button>
       </div>
     </header>
 
@@ -423,70 +420,7 @@
     </main>
   </div>
 
-  <!-- Modal 1: WFS Harvester Sandbox -->
-  <div id="wfs-harvester-modal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 style="font-weight:800;">Live WFS Data Harvester & Ingestion Sandbox</h2>
-        <button class="close-btn close-modal-btn">✕</button>
-      </div>
-      <div class="modal-body">
-        <p>Perform real-time OGC Web Feature Service (WFS) spatial data ingestion directly from the official Government Town Planning Spatial Gateway. This engine streams verified vector boundaries into encrypted enterprise databases.</p>
-        
-        <div style="display: flex; gap: 12px; margin: 16px 0;">
-          <select id="wfs-layer-select" class="search-input" style="width: 70%;">
-            <option value="ctp:final_plot_boundary">AUDA Final Plot Boundaries (ctp:final_plot_boundary)</option>
-            <option value="ctp:original_plot_boundary">AUDA Original Plot Boundaries (ctp:original_plot_boundary)</option>
-            <option value="ctp:road">AUDA TP Road Network (ctp:road)</option>
-            <option value="ctp:dp_reservation_line">AUDA DP Reservations (ctp:dp_reservation_line)</option>
-          </select>
-          <button id="run-harvest-test" class="btn btn-primary" style="width: 30%;">▶ Run Extraction</button>
-        </div>
-
-        <h4>Console & GeoJSON Payload Output:</h4>
-        <pre id="wfs-console-output" class="code-box" style="height: 250px; overflow-y: auto;">Click 'Run Extraction' to initiate OGC WFS GetFeature query...</pre>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal 2: Enterprise Network Protocols & Gateway Guide -->
-  <div id="api-guide-modal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 style="font-weight:800;">Enterprise Spatial Gateway & Network Protocols</h2>
-        <button class="close-btn close-modal-btn">✕</button>
-      </div>
-      <div class="modal-body">
-        <p>The Shivalik RoS GIS Intelligence Portal operates on encrypted spatial tile pipelines and token-gated WMS/WFS government interfaces. For enterprise API provisioning or VPN whitelist access, please consult the Shivalik Central IT Infrastructure Directorate.</p>
-
-        <div class="step-card">
-          <div class="step-number">1</div>
-          <div>
-            <h4 style="margin: 0 0 6px 0;">Zero-Trust Token Authentication</h4>
-            <p style="margin: 0;">All OGC GetFeature requests and raster tile streaming sessions are authenticated via mutual TLS (mTLS) and dynamic JWT bearer tokens bound to authorized corporate IP ranges.</p>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">2</div>
-          <div>
-            <h4 style="margin: 0 0 6px 0;">Encrypted PostGIS Ingestion Pipeline</h4>
-            <p style="margin: 0;">Vector geometries harvested from municipal spatial gateways are transformed into EPSG:4326 and synchronized directly into our institutional PostGIS cluster with automated checksum verification.</p>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">3</div>
-          <div>
-            <h4 style="margin: 0 0 6px 0;">AnyROR / i-ORA Title Bridging</h4>
-            <p style="margin: 0;">Land ownership, Satbara (7/12) mutations, and bank lien verifications are queried via dedicated B2B government gateway bridges under strict regulatory audit logging.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal 3: Shivalik RoS Deal Pipeline CRM Board -->
+  <!-- Modal 1: Shivalik RoS Deal Pipeline CRM Board -->
   <div id="pipeline-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 1050px; width: 95%;">
       <div class="modal-header">
@@ -536,13 +470,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
   <!-- App JS Controllers -->
-  <script src="src/js/auda-data.js?v=4.3"></script>
-  <script src="src/js/map-engine.js?v=4.3"></script>
-  <script src="src/js/search-controller.js?v=4.3"></script>
-  <script src="src/js/due-diligence.js?v=4.3"></script>
-  <script src="src/js/harvester-modal.js?v=4.3"></script>
-  <script src="src/js/pipeline-modal.js?v=4.3"></script>
-  <script src="src/js/auto-tour.js?v=4.3"></script>
-  <script src="src/js/app.js?v=4.3"></script>
+  <script src="src/js/auda-data.js?v=4.4"></script>
+  <script src="src/js/map-engine.js?v=4.4"></script>
+  <script src="src/js/search-controller.js?v=4.4"></script>
+  <script src="src/js/due-diligence.js?v=4.4"></script>
+  <script src="src/js/pipeline-modal.js?v=4.4"></script>
+  <script src="src/js/app.js?v=4.4"></script>
 </body>
 </html>

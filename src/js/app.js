@@ -28,24 +28,12 @@ function initShivalikPortal() {
       console.error("DueDiligenceController not found or invalid.");
     }
 
-    // 4. Initialize WFS Harvester & API Guide Modals Controller
-    if (window.harvesterController && typeof window.harvesterController.init === 'function') {
-      window.harvesterController.init();
-    } else {
-      console.error("HarvesterController not found or invalid.");
-    }
-
-    // 5. Initialize RoS Deal Pipeline CRM Controller
+    // 4. Initialize RoS Deal Pipeline CRM Controller
     if (window.pipelineController && typeof window.pipelineController.init === 'function') {
       window.pipelineController.init();
     }
 
-    // 6. Initialize Executive Auto-Tour Presentation Controller
-    if (window.autoTourController && typeof window.autoTourController.init === 'function') {
-      window.autoTourController.init();
-    }
-
-    // 7. Ensure Leaflet canvas resizes correctly and renders all tiles
+    // 5. Ensure Leaflet canvas resizes correctly and renders all tiles
     setTimeout(() => {
       if (window.mapEngine && window.mapEngine.map) {
         window.mapEngine.map.invalidateSize();
