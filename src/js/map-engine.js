@@ -51,6 +51,7 @@ class MapEngine {
 
     // Set default base layer
     this.baseLayers['Google Satellite'].addTo(this.map);
+    this.currentBaseLayerName = 'Google Satellite';
 
     // Fix: Ensure Leaflet viewport container dimensions are immediately calculated so map tiles render without requiring a zoom
     const invalidate = () => { if (this.map) { this.map.invalidateSize(); } };
@@ -193,19 +194,22 @@ class MapEngine {
   }
 
   switchBaseLayer(layerName) {
-    if (this.currentBaseLayerName === layerName) return;
-    
-    const oldLayer = this.baseLayers[this.currentBaseLayerName];
     const newLayer = this.baseLayers[layerName];
+    if (!newLayer || !this.map) return;
 
-    if (oldLayer && this.map.hasLayer(oldLayer)) {
-      this.map.removeLayer(oldLayer);
-    }
-    if (newLayer) {
+    // Remove all existing base layers from map to prevent stacking or occlusion
+    Object.keys(this.baseLayers).forEach(key => {
+      const layer = this.baseLayers[key];
+      if (this.map.hasLayer(layer) && layer !== newLayer) {
+        this.map.removeLayer(layer);
+      }
+    });
+
+    if (!this.map.hasLayer(newLayer)) {
       newLayer.addTo(this.map);
-      newLayer.bringToBack();
-      this.currentBaseLayerName = layerName;
     }
+    newLayer.bringToBack();
+    this.currentBaseLayerName = layerName;
   }
 
   getPlotZoning(feature) {
