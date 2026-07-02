@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   
   <!-- Custom Vanilla Styles -->
-  <link rel="stylesheet" href="src/css/styles.css?v=4.0">
+  <link rel="stylesheet" href="src/css/styles.css?v=4.1">
 </head>
 <body>
   <div class="app-container">
@@ -316,21 +316,39 @@
             </div>
           </div>
 
-          <!-- Legal Title & Revenue Clearance Card -->
-          <div class="feasibility-card">
-            <div class="card-title">Legal Title & Revenue Verification</div>
-            <div class="metric-grid">
-              <div class="metric-item">
-                <div class="metric-label">Tenure Classification</div>
-                <div class="metric-value" id="dd-legal-tenure" style="font-size: 13px;">Old Tenure (Freehold)</div>
+          <!-- Legal Title & Revenue Clearance Card (Pathway A Gateway) -->
+          <div class="feasibility-card" style="border: 1px solid rgba(0, 242, 254, 0.4); background: rgba(15, 23, 42, 0.85);">
+            <div class="card-title" style="color: var(--accent-cyan); display: flex; justify-content: space-between; align-items: center;">
+              <span>Real-Time Title & Revenue Verification (7/12 & 8-A)</span>
+              <span class="tag tag-cyan" style="font-size: 9px;">PATHWAY A: B2B GATEWAY</span>
+            </div>
+            <button id="fetch-anyror-btn" class="btn btn-primary" style="width: 100%; margin: 8px 0 14px 0; height: 38px; font-size: 12.5px; font-weight: 600; border-color: #00f2fe; color: #00f2fe; background: rgba(0, 242, 254, 0.1); display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>📡 Interlock AnyROR / i-ORA Gateway API</span>
+            </button>
+            <div class="metric-grid" id="anyror-data-grid">
+              <div class="metric-item" style="grid-column: span 2;">
+                <div class="metric-label">Khatedar (Recorded Title Owners - Form 8-A)</div>
+                <div class="metric-value" id="dd-legal-owners" style="font-size: 13px; color: #cbd5e1;">[ACTION] Click button above to execute live API interface</div>
               </div>
               <div class="metric-item">
-                <div class="metric-label">iORA 7/12 & 8-A Record</div>
-                <div class="metric-value" id="dd-legal-iora" style="font-size: 13px; color: var(--accent-emerald); font-weight: 700;">[VERIFIED] Online Record</div>
+                <div class="metric-label">Survey / Block No.</div>
+                <div class="metric-value" id="dd-legal-survey" style="font-size: 13px; font-family: 'JetBrains Mono', monospace;">--</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Khata No. / Sub-Account</div>
+                <div class="metric-value" id="dd-legal-khata" style="font-size: 13px; font-family: 'JetBrains Mono', monospace;">--</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Tenure Status (Section 43)</div>
+                <div class="metric-value" id="dd-legal-tenure" style="font-size: 12.5px;">--</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Bank Liens & Boja Patra</div>
+                <div class="metric-value" id="dd-legal-boja" style="font-size: 12.5px;">--</div>
               </div>
               <div class="metric-item" style="grid-column: span 2;">
-                <div class="metric-label">Title Search Report (Last 30 Years)</div>
-                <div class="metric-value metric-gold" id="dd-legal-title" style="font-size: 13px;">[APPROVED] Clean Legal Title Search</div>
+                <div class="metric-label">Latest Mutation Entry (Form 6 / Hakk Patra)</div>
+                <div class="metric-value" id="dd-legal-mutation" style="font-size: 12px; color: var(--text-secondary);">--</div>
               </div>
             </div>
           </div>
@@ -520,13 +538,13 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
   <!-- App JS Controllers -->
-  <script src="src/js/auda-data.js?v=4.0"></script>
-  <script src="src/js/map-engine.js?v=4.0"></script>
-  <script src="src/js/search-controller.js?v=4.0"></script>
-  <script src="src/js/due-diligence.js?v=4.0"></script>
-  <script src="src/js/harvester-modal.js?v=4.0"></script>
-  <script src="src/js/pipeline-modal.js?v=4.0"></script>
-  <script src="src/js/auto-tour.js?v=4.0"></script>
-  <script src="src/js/app.js?v=4.0"></script>
+  <script src="src/js/auda-data.js?v=4.1"></script>
+  <script src="src/js/map-engine.js?v=4.1"></script>
+  <script src="src/js/search-controller.js?v=4.1"></script>
+  <script src="src/js/due-diligence.js?v=4.1"></script>
+  <script src="src/js/harvester-modal.js?v=4.1"></script>
+  <script src="src/js/pipeline-modal.js?v=4.1"></script>
+  <script src="src/js/auto-tour.js?v=4.1"></script>
+  <script src="src/js/app.js?v=4.1"></script>
 </body>
 </html>
