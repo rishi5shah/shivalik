@@ -13,20 +13,20 @@
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   
-  --accent-cyan: #00f2fe;
-  --accent-blue: #4facfe;
+  --accent-cyan: #38bdf8;
+  --accent-blue: #3b82f6;
   --accent-emerald: #10b981;
   --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
-  --accent-purple: #8b5cf6;
+  --accent-rose: #e11d48;
+  --accent-purple: #6366f1;
   
-  --gradient-primary: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
-  --gradient-gold: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-  --gradient-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-primary: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  --gradient-gold: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  --gradient-emerald: linear-gradient(135deg, #059669 0%, #10b981 100%);
   
   --shadow-lg: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 25px rgba(0, 242, 254, 0.25);
-  --shadow-gold-glow: 0 0 25px rgba(245, 158, 11, 0.25);
+  --shadow-glow: 0 4px 15px rgba(0, 0, 0, 0.35);
+  --shadow-gold-glow: 0 4px 15px rgba(0, 0, 0, 0.35);
   
   --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -885,16 +885,16 @@ input:checked + .slider:before {
 /* 🚀 Killer Features Styles (Auto-Tour, ROI Calc, Pipeline Board) */
 
 .btn-tour {
-  background: rgba(0, 242, 254, 0.08);
-  color: #00f2fe;
-  border: 1px solid rgba(0, 242, 254, 0.3);
+  background: rgba(56, 189, 248, 0.08);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
   font-weight: 600;
   box-shadow: none;
 }
 
 .btn-tour:hover {
-  background: rgba(0, 242, 254, 0.16);
-  border-color: #00f2fe;
+  background: rgba(56, 189, 248, 0.16);
+  border-color: #38bdf8;
   color: #fff;
   transform: translateY(-1px);
 }

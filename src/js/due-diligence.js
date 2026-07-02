@@ -117,9 +117,9 @@ class DueDiligenceController {
     const anyrorBtn = document.getElementById('fetch-anyror-btn');
     if (anyrorBtn) {
       anyrorBtn.disabled = false;
-      anyrorBtn.style.background = 'rgba(0, 242, 254, 0.1)';
-      anyrorBtn.style.color = '#00f2fe';
-      anyrorBtn.innerHTML = '<span>📡 Interlock AnyROR / i-ORA Gateway API</span>';
+      anyrorBtn.style.background = 'rgba(56, 189, 248, 0.1)';
+      anyrorBtn.style.color = '#38bdf8';
+      anyrorBtn.innerHTML = '<span>[PATHWAY A] Execute Live AnyROR / i-ORA Gateway API</span>';
     }
 
     // Hazard audit based on government status
@@ -153,10 +153,10 @@ class DueDiligenceController {
     btn.style.background = 'rgba(245, 158, 11, 0.15)';
     btn.style.borderColor = '#f59e0b';
     btn.style.color = '#f59e0b';
-    btn.innerHTML = '<span>⌛ Interfacing NIC AnyROR Gateway & Mamlatdar DB...</span>';
+    btn.innerHTML = '<span>[PROCESSING] Interfacing NIC AnyROR Gateway & Mamlatdar DB...</span>';
 
     if (window.searchController) {
-      window.searchController.showToast('📡 [PATHWAY A] Connecting to official Gujarat AnyROR B2B Gateway API...');
+      window.searchController.showToast('[PATHWAY A] Connecting to official Gujarat AnyROR B2B Gateway API...');
     }
 
     setTimeout(() => {
@@ -176,7 +176,7 @@ class DueDiligenceController {
       const isNewTenure = p.tenure && p.tenure.toLowerCase().includes('new');
       const tenureText = isPrimeTenure(p) ? 
         '<span style="color:#10b981; font-weight:700;">Old Tenure (Junu Sharat)</span><br/><small style="color:var(--text-secondary);">Commercial NA Eligible under Section 65</small>' : 
-        '<span style="color:#f43f5e; font-weight:700;">⚠️ New Tenure (Navu Sharat)</span><br/><small style="color:#f43f5e;">Subject to Section 43 Collector Premium</small>';
+        '<span style="color:#e11d48; font-weight:700;">[ALERT] New Tenure (Navu Sharat)</span><br/><small style="color:#e11d48;">Subject to Section 43 Collector Premium</small>';
 
       function isPrimeTenure(plot) {
         if (plot.tenure_type && plot.tenure_type.includes('Old')) return true;
@@ -192,7 +192,7 @@ class DueDiligenceController {
         if (el) el.innerHTML = html;
       };
 
-      setEl('dd-legal-owners', `<strong style="color:#00f2fe;">${ownerName}</strong><br/><small style="color:var(--text-secondary);">Verified against Land Revenue Form 8-A</small>`);
+      setEl('dd-legal-owners', `<strong style="color:#38bdf8;">${ownerName}</strong><br/><small style="color:var(--text-secondary);">Verified against Land Revenue Form 8-A</small>`);
       setEl('dd-legal-survey', surveyNo);
       setEl('dd-legal-khata', khataNo);
       setEl('dd-legal-tenure', tenureText);
@@ -202,10 +202,10 @@ class DueDiligenceController {
       btn.style.background = 'rgba(16, 185, 129, 0.15)';
       btn.style.borderColor = '#10b981';
       btn.style.color = '#10b981';
-      btn.innerHTML = `<span>✅ Digitally Signed via AnyROR Gateway (Ref: GUJ-712-2026-${Math.floor(1000 + Math.random()*9000)})</span>`;
+      btn.innerHTML = `<span>[VERIFIED] Digitally Signed via AnyROR Gateway (Ref: GUJ-712-2026-${Math.floor(1000 + Math.random()*9000)})</span>`;
 
       if (window.searchController) {
-        window.searchController.showToast('✅ [SUCCESS] Live 7/12 & 8-A Title Records Extracted & Digitally Verified!');
+        window.searchController.showToast('[SUCCESS] Live 7/12 & 8-A Title Records Extracted & Digitally Verified!');
       }
     }, 1200);
   }
@@ -288,8 +288,8 @@ class DueDiligenceController {
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; margin: 40px; background: #fff; line-height: 1.5; }
           .header { border-bottom: 3px solid #0f172a; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
           .logo { font-size: 28px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
-          .logo span { color: #0080ff; }
-          .badge { background: #0f172a; color: #00f2fe; padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+          .logo span { color: #2563eb; }
+          .badge { background: #0f172a; color: #38bdf8; padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
           .sub-badge { font-size: 12px; color: #64748b; margin-top: 6px; font-weight: 600; text-align: right; }
           h2 { color: #0f172a; margin: 0 0 10px 0; font-size: 24px; font-weight: 800; }
           .ai-summary { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #0080ff; padding: 16px 20px; border-radius: 6px; font-size: 13.5px; color: #334155; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }

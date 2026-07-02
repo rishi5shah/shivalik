@@ -66,7 +66,7 @@ class HarvesterAndGuideController {
     const selectedLayer = layerSelect ? layerSelect.value : 'ctp:final_plot_boundary';
 
     const url = `https://tpvd.openprp.in/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=${selectedLayer}&outputFormat=application/json&maxFeatures=2&srsName=EPSG:4326`;
-    consoleBox.innerHTML += `<span style="color: #00f2fe;">[SEND] GET /geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=${selectedLayer}&outputFormat=application/json&maxFeatures=2&srsName=EPSG:4326</span>\n`;
+    consoleBox.innerHTML += `<span style="color: #38bdf8;">[SEND] GET /geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=${selectedLayer}&outputFormat=application/json&maxFeatures=2&srsName=EPSG:4326</span>\n`;
     
     try {
       const startTime = performance.now();

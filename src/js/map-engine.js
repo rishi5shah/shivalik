@@ -197,7 +197,7 @@ class MapEngine {
       this.vectorLayer = L.geoJSON(geojsonData, {
         style: (feature) => {
           const status = feature.properties.status || '';
-          let fillColor = '#00f2fe'; // Cyan default
+          let fillColor = '#38bdf8'; // Executive Slate Blue default
           if (status.includes('Preliminary')) fillColor = '#f59e0b'; // Amber
           if (status.includes('Draft')) fillColor = '#a855f7'; // Purple
 
@@ -216,7 +216,7 @@ class MapEngine {
               const l = e.target;
               l.setStyle({
                 weight: 3.5,
-                color: '#00f2fe',
+                color: '#38bdf8',
                 fillOpacity: 0.55
               });
               l.bringToFront();
@@ -237,7 +237,7 @@ class MapEngine {
           const areaSqm = props.fp_area_final || props.fp_area || props.area_sqm || 'N/A';
           layer.bindTooltip(
             `<div style="font-family: 'Outfit', sans-serif; font-size: 12px;">
-              <span style="color: #00f2fe; font-weight: 800;">[REAL GOVT DATA]</span><br/>
+              <span style="color: #38bdf8; font-weight: 800;">[REAL GOVT DATA]</span><br/>
               <strong>FP No. ${props.fp_no || 'N/A'}</strong> (${props.tps_name || 'Town Planning Scheme'})<br/>
               Village: <strong>${props.village || 'Ahmedabad'}</strong> | Area: <strong>${areaSqm} m²</strong>
             </div>`,
