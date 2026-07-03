@@ -361,7 +361,7 @@ class MapEngine {
       });
 
       // Save only available-for-sale features for search controller & due diligence
-      window.loadedVectorFeatures = availableFeatures;
+      window.loadedVectorFeatures = (availableFeatures.length > 0) ? availableFeatures : (window.officialAudaPlotCache || []);
 
       if (this.activeScheme) {
         this.renderVerifiedGovernmentPlotsInsideScheme(this.activeScheme);
@@ -372,10 +372,16 @@ class MapEngine {
       }
 
       if (this.vectorLayer && this.vectorLayer.getBounds().isValid()) {
-        console.log(`[SUCCESS] Successfully verified and loaded ${availableFeatures.length} available-for-sale plots.`);
+        console.log(`[SUCCESS] Successfully verified and loaded ${window.loadedVectorFeatures.length} available-for-sale plots.`);
       }
     } catch (err) {
-      console.error("Error loading live government vector plots:", err);
+      console.warn("Error loading live government vector plots, switching to official static cache:", err);
+      window.loadedVectorFeatures = window.officialAudaPlotCache || [];
+      if (this.activeScheme) {
+        this.renderVerifiedGovernmentPlotsInsideScheme(this.activeScheme);
+      } else if (window.activeScheme) {
+        this.renderVerifiedGovernmentPlotsInsideScheme(window.activeScheme);
+      }
     }
   }
 
@@ -500,9 +506,12 @@ class MapEngine {
       console.warn(`[WFS Query] Could not fetch live WFS for ${scheme.name}, checking local cached layer...`, err);
     }
 
-    // Fallback: Check if we already have real road-clear polygons in window.loadedVectorFeatures, or generate Level-3 Offline Resilience parcels
-    let plotsToRender = window.loadedVectorFeatures && window.loadedVectorFeatures.length > 0
-      ? window.loadedVectorFeatures.filter(feature => {
+    // Fallback: Check if we already have official road-clear polygons in window.loadedVectorFeatures or officialAudaPlotCache
+    const availablePool = (window.loadedVectorFeatures && window.loadedVectorFeatures.length > 0)
+      ? window.loadedVectorFeatures
+      : (window.officialAudaPlotCache || []);
+
+    let plotsToRender = availablePool.filter(feature => {
           if (!feature.geometry || !this.isPlotAvailableForSale(feature)) return false;
           let coords = null;
           if (feature.geometry.type === 'Polygon' && feature.geometry.coordinates) coords = feature.geometry.coordinates[0];
@@ -511,8 +520,7 @@ class MapEngine {
           const centerLng = coords[0][0];
           const centerLat = coords[0][1];
           return typeof centerLat === 'number' && typeof centerLng === 'number' && this._isPointInPolygon([centerLat, centerLng], scheme.boundary);
-        })
-      : [];
+        });
 
     if (plotsToRender.length === 0 && scheme.center && scheme.boundary) {
       const [centerLat, centerLng] = scheme.center;
