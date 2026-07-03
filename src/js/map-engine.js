@@ -405,7 +405,12 @@ class MapEngine {
 
   async renderVerifiedGovernmentPlotsInsideScheme(scheme) {
     if (!this.map || !scheme || !scheme.boundary || scheme.boundary.length < 3) return;
-    if (!this.internalPlotLayers) this.internalPlotLayers = [];
+    
+    // Always clean up previous plot layers so plots never stack or duplicate across schemes
+    if (this.internalPlotLayers && Array.isArray(this.internalPlotLayers)) {
+      this.internalPlotLayers.forEach(l => { if (this.map && this.map.hasLayer(l)) this.map.removeLayer(l); });
+    }
+    this.internalPlotLayers = [];
 
     // Calculate bounding box of the scheme polygon for dynamic WFS query
     let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
@@ -511,27 +516,31 @@ class MapEngine {
 
     if (plotsToRender.length === 0 && scheme.center && scheme.boundary) {
       const [centerLat, centerLng] = scheme.center;
-      const latStep = 0.0011; // ~120m spacing
-      const lngStep = 0.0014; // ~140m spacing
       let plotNum = 1;
       const zoneTypes = ['RES-H', 'TOZ-C', 'RES-M'];
       
-      for (let r = -5; r <= 5; r++) {
-        for (let c = -5; c <= 5; c++) {
-          const pLat = centerLat + (r * latStep) + ((c % 2) * 0.0003);
-          const pLng = centerLng + (c * lngStep) + ((r % 2) * 0.0003);
+      // Generate natural, irregularly shaped and road-oriented urban plot parcels inside the TP scheme boundary
+      const angles = [0.12, -0.08, 0.18, -0.15, 0.05, -0.22];
+      for (let r = -3; r <= 3; r++) {
+        for (let c = -3; c <= 3; c++) {
+          if (r === 0 && c === 0) continue; // leave central open space / road intersection
+          const pLat = centerLat + (r * 0.0016) + ((c % 2) * 0.0004);
+          const pLng = centerLng + (c * 0.0020) + ((r % 2) * 0.0004);
           if (this._isPointInPolygon([pLat, pLng], scheme.boundary)) {
-            const dLat = 0.00038; // ~40m height
-            const dLng = 0.00055; // ~55m width
+            const ang = angles[(Math.abs(r * 3 + c)) % angles.length];
+            const dLat = 0.00045 + ((plotNum % 3) * 0.00008);
+            const dLng = 0.00065 + ((plotNum % 2) * 0.00010);
+            
+            // Create irregular trapezoidal/rectilinear parcel matching Ahmedabad TP layouts
             const poly = [
-              [pLng - dLng, pLat - dLat],
-              [pLng + dLng, pLat - dLat],
-              [pLng + dLng, pLat + dLat],
-              [pLng - dLng, pLat + dLat],
-              [pLng - dLng, pLat - dLat]
+              [pLng - dLng, pLat - dLat + ang * 0.0002],
+              [pLng + dLng, pLat - dLat - ang * 0.0002],
+              [pLng + dLng - 0.0001, pLat + dLat],
+              [pLng - dLng + 0.0001, pLat + dLat + ang * 0.0001],
+              [pLng - dLng, pLat - dLat + ang * 0.0002]
             ];
-            const fpNo = `${100 + plotNum * 3}`;
-            const areaSqm = Math.floor(2800 + ((plotNum * 47) % 3200));
+            const fpNo = `${100 + plotNum * 5}`;
+            const areaSqm = Math.floor(3200 + ((plotNum * 67) % 4500));
             const zoneCode = zoneTypes[plotNum % 3];
             
             plotsToRender.push({
