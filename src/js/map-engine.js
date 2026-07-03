@@ -295,7 +295,10 @@ class MapEngine {
 
       // Fetch real live official Town Planning Plots across the entire AUDA Growth Corridor (Shela, Shilaj, Bodakdev, Thaltej, Ambli)
       const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&bbox=72.40,22.95,72.68,23.18`;
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const geojsonData = await response.json();
 
       // Filter strictly for institutional parcels VERIFIED AVAILABLE FOR SALE

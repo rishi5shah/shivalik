@@ -12,20 +12,20 @@
     if (saved) window._shivalik_audit_log = JSON.parse(saved);
   } catch(e) {}
 
+  let _lastLogTime = 0;
   function logIntrusion(type, detail) {
+    const now = Date.now();
+    // Throttle logging to prevent main thread lockup from browser extension loops
+    if (now - _lastLogTime < 2000) return;
+    _lastLogTime = now;
+
     const time = new Date().toLocaleTimeString();
     const event = { time, type, detail };
     window._shivalik_audit_log.push(event);
+    if (window._shivalik_audit_log.length > 50) window._shivalik_audit_log.shift();
     try {
       sessionStorage.setItem('shivalik_sec_audit', JSON.stringify(window._shivalik_audit_log));
     } catch(e) {}
-
-    // Display live red-alert notification toast if controller is active
-    setTimeout(() => {
-      if (window.searchController && typeof window.searchController.showToast === 'function') {
-        window.searchController.showToast(`[SECURITY SHIELD] Blocked unauthorized inspection: ${type}`);
-      }
-    }, 100);
   }
 
   // 1. Silencing Console Output & Injecting Honeypot Traps
@@ -385,15 +385,11 @@
       document.body.appendChild(blurCurtain);
     }
     blurCurtain.style.display = 'flex';
-    const appEl = document.querySelector('.app-container');
-    if (appEl) appEl.style.filter = 'blur(35px) brightness(0.05)';
     logIntrusion("Screen Capture / Focus Loss", reason || "Window backgrounded or Snipping Tool invoked");
   }
 
   function removeBlurLockdown() {
     if (blurCurtain) blurCurtain.style.display = 'none';
-    const appEl = document.querySelector('.app-container');
-    if (appEl) appEl.style.filter = 'none';
   }
 
   window.addEventListener('blur', () => triggerBlurLockdown("Window Focus Lost (Snipping Tool / Multitasking)"));
