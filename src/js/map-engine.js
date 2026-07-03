@@ -290,16 +290,29 @@ class MapEngine {
   async loadLiveGovernmentVectorPlots() {
     try {
       if (window.searchController) {
-        window.searchController.showToast("[WFS] Filtering 100% Verified Plots AVAILABLE FOR SALE across AUDA Corridor...");
+        window.searchController.showToast("[DATA MOAT] Loading Shivalik Self-Hosted Proprietary Cadastral Vault...");
       }
 
-      // Fetch real live official Town Planning Plots across the entire AUDA Growth Corridor (Shela, Shilaj, Bodakdev, Thaltej, Ambli)
-      const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&bbox=72.40,22.95,72.68,23.18`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1200);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      const geojsonData = await response.json();
+      let geojsonData = null;
+      try {
+        // Pillar 2: Primary Instant Edge Load from Self-Hosted Data Moat (CDN Vault)
+        const vaultRes = await fetch("src/data/shivalik-auda-master.json?v=" + Date.now());
+        if (vaultRes.ok) {
+          geojsonData = await vaultRes.json();
+          console.log(`[SHIVALIK VAULT] Successfully loaded ${geojsonData.features.length} proprietary cadastral parcels from edge moat.`);
+        }
+      } catch (vaultErr) {
+        console.warn("[SHIVALIK VAULT] Local CDN fetch error, checking remote WFS:", vaultErr);
+      }
+
+      if (!geojsonData || !geojsonData.features || geojsonData.features.length === 0) {
+        const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&bbox=72.40,22.95,72.68,23.18`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        geojsonData = await response.json();
+      }
 
       // Filter strictly for institutional parcels VERIFIED AVAILABLE FOR SALE
       const availableFeatures = (geojsonData.features || []).filter(feat => this.isPlotAvailableForSale(feat));
@@ -432,7 +445,60 @@ class MapEngine {
 
     try {
       if (window.searchController && typeof window.searchController.showToast === 'function') {
-        window.searchController.showToast(`[WFS] Loading 100% road-clear verified Govt Plots for ${scheme.name}...`);
+        window.searchController.showToast(`[DATA MOAT] Rendering Verified Cadastral Plots for ${scheme.name}...`);
+      }
+
+      // Pillar 2 & 4: Instant check in local self-hosted data vault before making external WFS network call!
+      const localPool = (window.loadedVectorFeatures && window.loadedVectorFeatures.length > 0)
+        ? window.loadedVectorFeatures
+        : (window.officialAudaPlotCache || []);
+
+      const matchingLocal = localPool.filter(feat => {
+        if (!feat.geometry || !this.isPlotAvailableForSale(feat)) return false;
+        let coords = null;
+        if (feat.geometry.type === 'Polygon' && feat.geometry.coordinates) coords = feat.geometry.coordinates[0];
+        else if (feat.geometry.type === 'MultiPolygon' && feat.geometry.coordinates) coords = feat.geometry.coordinates[0][0];
+        if (!coords || !coords.length) return false;
+        return this._isPointInPolygon([coords[0][1], coords[0][0]], scheme.boundary);
+      });
+
+      if (matchingLocal.length > 0) {
+        let addedCount = 0;
+        const schemePlotLayer = L.geoJSON(matchingLocal, {
+          style: (feature) => {
+            const z = this.getPlotZoning(feature);
+            return { color: '#ffffff', weight: 2.0, opacity: 0.95, fillColor: z.color, fillOpacity: 0.48, dashArray: '2' };
+          },
+          onEachFeature: (feature, layer) => {
+            const z = this.getPlotZoning(feature);
+            layer.on({
+              mouseover: (e) => {
+                const l = e.target;
+                l.setStyle({ weight: 3.5, color: '#10b981', fillOpacity: 0.85 });
+                l.bringToFront();
+              },
+              mouseout: (e) => {
+                schemePlotLayer.resetStyle(e.target);
+              },
+              click: (e) => {
+                L.DomEvent.stopPropagation(e);
+                if (window.dueDiligenceController) {
+                  window.dueDiligenceController.openDrawer(feature.properties, scheme);
+                }
+              }
+            });
+            addedCount++;
+          }
+        });
+        if (this.activePlotLayer) {
+          try { this.map.removeLayer(this.activePlotLayer); } catch(e){}
+        }
+        this.activePlotLayer = schemePlotLayer;
+        this.activePlotLayer.addTo(this.map);
+        if (window.searchController && typeof window.searchController.showToast === 'function') {
+          window.searchController.showToast(`[SHIVALIK MOAT] Displaying ${addedCount} verified proprietary parcels inside ${scheme.name}!`);
+        }
+        return;
       }
 
       const bbox = `${minLng},${minLat},${maxLng},${maxLat},EPSG:4326`;
