@@ -50,11 +50,11 @@
       const latSpan = maxLat - minLat;
       const lngSpan = maxLng - minLng;
 
-      // Create a dynamic cadastral grid covering the entire scheme bounding box (~90m to ~120m per parcel)
-      const numRows = Math.max(6, Math.round(latSpan / 0.0011));
-      const numCols = Math.max(6, Math.round(lngSpan / 0.0013));
+      // Create a dynamic cadastral grid covering the entire scheme bounding box
+      const numRows = Math.max(8, Math.round(latSpan / 0.00065));
+      const numCols = Math.max(8, Math.round(lngSpan / 0.00075));
 
-      // Build shared perturbed vertices across the entire polygon so adjacent plots abut with zero gaps
+      // Build shared orthogonal vertices across the entire polygon so adjacent plots abut with zero gaps
       const vertexGrid = [];
       for (let r = 0; r <= numRows; r++) {
         const rowArr = [];
@@ -67,17 +67,6 @@
           if (r >= Math.floor(numRows * 0.66)) lat += 0.00015;
           if (c >= Math.floor(numCols * 0.33)) lng += 0.00018;
           if (c >= Math.floor(numCols * 0.66)) lng += 0.00018;
-
-          // Apply survey perturbation to interior vertices for realistic irregular cadastral shapes
-          if (r > 0 && r < numRows && c > 0 && c < numCols && 
-              r !== Math.floor(numRows * 0.33) && r !== Math.floor(numRows * 0.66) &&
-              c !== Math.floor(numCols * 0.33) && c !== Math.floor(numCols * 0.66)) {
-            const hash = (r * 31 + c * 47 + schemeIdx * 19) % 17;
-            const perturbLat = ((hash % 7) - 3) * (latSpan / numRows) * 0.25;
-            const perturbLng = (((hash * 5) % 7) - 3) * (lngSpan / numCols) * 0.28;
-            lat += perturbLat;
-            lng += perturbLng;
-          }
 
           rowArr.push([parseFloat(lng.toFixed(6)), parseFloat(lat.toFixed(6))]);
         }
@@ -97,8 +86,14 @@
           const centroidLat = (v0[1] + v2[1]) / 2;
           const centroidLng = (v0[0] + v2[0]) / 2;
 
-          // ONLY include parcels whose centroid falls strictly inside the actual TP scheme boundary polygon
-          if (isPointInPoly([centroidLat, centroidLng], scheme.boundary)) {
+          let insideCount = 0;
+          if (isPointInPoly([v0[1], v0[0]], scheme.boundary)) insideCount++;
+          if (isPointInPoly([v1[1], v1[0]], scheme.boundary)) insideCount++;
+          if (isPointInPoly([v2[1], v2[0]], scheme.boundary)) insideCount++;
+          if (isPointInPoly([v3[1], v3[0]], scheme.boundary)) insideCount++;
+
+          // ONLY include parcels strictly or overwhelmingly inside the actual TP scheme boundary polygon
+          if (insideCount >= 3 || (insideCount >= 2 && isPointInPoly([centroidLat, centroidLng], scheme.boundary)) || isPointInPoly([centroidLat, centroidLng], scheme.boundary)) {
             const poly = [v0, v1, v2, v3, v0];
             const fpNo = `${100 + plotCounter * 3 + (schemeIdx % 7)}`;
             const areaSqm = Math.floor(2800 + ((plotCounter * 97 + schemeIdx * 23) % 4500));
