@@ -129,28 +129,49 @@ function enrichPlotFeature(feature, corridor, idx) {
   return feature;
 }
 
-// Generate institutional cadastral polygon coordinates matching Ahmedabad TP layouts
-function generateCadastralPolygon(centerLat, centerLng, idx, schemeIdx) {
-  const angles = [0.12, -0.08, 0.18, -0.15, 0.05, -0.22, 0.09, -0.11];
-  const ang = angles[(idx + schemeIdx) % angles.length];
+// Compute shared cadastral vertex coordinates ensuring abutting parcels with zero gaps
+function getSharedVertex(row, col, centerLat, centerLng, schemeIdx) {
+  // Base grid spacing (~110 meters per cell)
+  const baseLat = centerLat - 0.0025 + (row * 0.0010);
+  const baseLng = centerLng - 0.0030 + (col * 0.0012);
   
-  const r = ((idx % 5) - 2) * 0.0013;
-  const c = (Math.floor(idx / 5) - 2) * 0.0016;
-  const pLat = centerLat + r;
-  const pLng = centerLng + c;
-  
-  const dLat = 0.00042 + ((idx % 3) * 0.00007);
-  const dLng = 0.00058 + ((idx % 2) * 0.00009);
-  
+  // Add road corridors between sectors (arterial road at row=2,3 and col=2,3)
+  let roadOffsetLat = 0;
+  let roadOffsetLng = 0;
+  if (row >= 3) roadOffsetLat += 0.00018; // 20m arterial road gap
+  if (col >= 3) roadOffsetLng += 0.00022; // 24m arterial road gap
+
+  // Apply deterministic survey perturbation to internal shared vertices so plots have authentic irregular cadastral shapes
+  let perturbLat = 0;
+  let perturbLng = 0;
+  if (row > 0 && row < 5 && col > 0 && col < 5 && !(row === 2 || row === 3 || col === 2 || col === 3)) {
+    const hash = (row * 17 + col * 31 + schemeIdx * 13) % 11;
+    perturbLat = ((hash % 5) - 2) * 0.00009;
+    perturbLng = (((hash * 3) % 5) - 2) * 0.00011;
+  }
+
   return [
-    [
-      [parseFloat((pLng - dLng).toFixed(6)), parseFloat((pLat - dLat + ang * 0.0002).toFixed(6))],
-      [parseFloat((pLng + dLng).toFixed(6)), parseFloat((pLat - dLat - ang * 0.0002).toFixed(6))],
-      [parseFloat((pLng + dLng - 0.0001).toFixed(6)), parseFloat((pLat + dLat).toFixed(6))],
-      [parseFloat((pLng - dLng + 0.0001).toFixed(6)), parseFloat((pLat + dLat + ang * 0.0001).toFixed(6))],
-      [parseFloat((pLng - dLng).toFixed(6)), parseFloat((pLat - dLat + ang * 0.0002).toFixed(6))]
-    ]
+    parseFloat((baseLng + roadOffsetLng + perturbLng).toFixed(6)),
+    parseFloat((baseLat + roadOffsetLat + perturbLat).toFixed(6))
   ];
+}
+
+// Generate contiguous abutting cadastral plot polygons matching Ahmedabad TP block subdivision layouts
+function generateCadastralPolygon(centerLat, centerLng, idx, schemeIdx) {
+  const row = Math.floor(idx / 5);
+  const col = idx % 5;
+
+  // Each parcel (row, col) is bounded by 4 shared vertices:
+  // v0: bottom-left (row, col)
+  // v1: bottom-right (row, col+1)
+  // v2: top-right (row+1, col+1)
+  // v3: top-left (row+1, col)
+  const v0 = getSharedVertex(row, col, centerLat, centerLng, schemeIdx);
+  const v1 = getSharedVertex(row, col + 1, centerLat, centerLng, schemeIdx);
+  const v2 = getSharedVertex(row + 1, col + 1, centerLat, centerLng, schemeIdx);
+  const v3 = getSharedVertex(row + 1, col, centerLat, centerLng, schemeIdx);
+
+  return [[v0, v1, v2, v3, v0]];
 }
 
 // Main ETL Pipeline Execution

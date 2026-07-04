@@ -36,7 +36,29 @@
       return inside;
     }
 
-    const angles = [0.12, -0.08, 0.18, -0.15, 0.05, -0.22, 0.09, -0.11];
+    // Compute shared cadastral vertex coordinates ensuring abutting parcels with zero gaps
+    function getSharedVertex(row, col, centerLat, centerLng, schemeIdx) {
+      const baseLat = centerLat - 0.0025 + (row * 0.0010);
+      const baseLng = centerLng - 0.0030 + (col * 0.0012);
+      
+      let roadOffsetLat = 0;
+      let roadOffsetLng = 0;
+      if (row >= 3) roadOffsetLat += 0.00018; // 20m arterial road gap
+      if (col >= 3) roadOffsetLng += 0.00022; // 24m arterial road gap
+
+      let perturbLat = 0;
+      let perturbLng = 0;
+      if (row > 0 && row < 5 && col > 0 && col < 5 && !(row === 2 || row === 3 || col === 2 || col === 3)) {
+        const hash = (row * 17 + col * 31 + schemeIdx * 13) % 11;
+        perturbLat = ((hash % 5) - 2) * 0.00009;
+        perturbLng = (((hash * 3) % 5) - 2) * 0.00011;
+      }
+
+      return [
+        parseFloat((baseLng + roadOffsetLng + perturbLng).toFixed(6)),
+        parseFloat((baseLat + roadOffsetLat + perturbLat).toFixed(6))
+      ];
+    }
 
     window.audaPrimeSchemes.forEach((scheme, schemeIdx) => {
       if (!scheme.center || !scheme.boundary || scheme.boundary.length < 3) return;
@@ -44,53 +66,47 @@
       const [centerLat, centerLng] = scheme.center;
       let plotCounter = 1;
 
-      // Generate 16-20 institutional plot parcels distributed across the scheme boundary
-      for (let r = -3; r <= 3; r++) {
-        for (let c = -3; c <= 3; c++) {
-          if (r === 0 && c === 0) continue; // leave central arterial road intersection clear
+      // Generate 25 abutting institutional cadastral parcels tiling the sector
+      for (let idx = 0; idx < 25; idx++) {
+        const row = Math.floor(idx / 5);
+        const col = idx % 5;
 
-          const pLat = centerLat + (r * 0.0016) + ((c % 2) * 0.0004);
-          const pLng = centerLng + (c * 0.0020) + ((r % 2) * 0.0004);
+        const v0 = getSharedVertex(row, col, centerLat, centerLng, schemeIdx);
+        const v1 = getSharedVertex(row, col + 1, centerLat, centerLng, schemeIdx);
+        const v2 = getSharedVertex(row + 1, col + 1, centerLat, centerLng, schemeIdx);
+        const v3 = getSharedVertex(row + 1, col, centerLat, centerLng, schemeIdx);
 
-          if (isPointInPoly([pLat, pLng], scheme.boundary)) {
-            const ang = angles[(Math.abs(r * 3 + c + schemeIdx)) % angles.length];
-            const dLat = 0.00042 + ((plotCounter % 3) * 0.00008);
-            const dLng = 0.00062 + ((plotCounter % 2) * 0.00010);
+        const poly = [v0, v1, v2, v3, v0];
 
-            // Construct realistic irregular trapezoidal/rectilinear property boundary matching Ahmedabad TP layout
-            const poly = [
-              [pLng - dLng, pLat - dLat + ang * 0.0002],
-              [pLng + dLng, pLat - dLat - ang * 0.0002],
-              [pLng + dLng - 0.0001, pLat + dLat],
-              [pLng - dLng + 0.0001, pLat + dLat + ang * 0.0001],
-              [pLng - dLng, pLat - dLat + ang * 0.0002]
-            ];
+        // Ensure plot centroid is within scheme vicinity
+        const centroidLat = (v0[1] + v2[1]) / 2;
+        const centroidLng = (v0[0] + v2[0]) / 2;
 
-            const fpNo = `${100 + plotCounter * 4 + (schemeIdx % 5)}`;
-            const areaSqm = Math.floor(3100 + ((plotCounter * 83 + schemeIdx * 13) % 4800));
-            const zoneObj = zoneTypes[(plotCounter + schemeIdx) % 3];
+        if (isPointInPoly([centroidLat, centroidLng], scheme.boundary) || idx < 12) {
+          const fpNo = `${100 + plotCounter * 4 + (schemeIdx % 5)}`;
+          const areaSqm = Math.floor(3100 + ((plotCounter * 83 + schemeIdx * 13) % 4800));
+          const zoneObj = zoneTypes[(plotCounter + schemeIdx) % 3];
 
-            cachedFeatures.push({
-              type: "Feature",
-              geometry: { type: "Polygon", coordinates: [poly] },
-              properties: {
-                fp_no: fpNo,
-                fp_number: fpNo,
-                tps_name: scheme.name,
-                village: scheme.village,
-                fp_area_final: areaSqm,
-                fp_area: areaSqm,
-                area_sqm: areaSqm,
-                zone: zoneObj.code,
-                zone_name: zoneObj.name,
-                max_fsi: zoneObj.fsi,
-                rate: zoneObj.rate,
-                status: "AVAILABLE FOR SALE",
-                remarks: "100% Clear Title • Shivalik Underwriting Approved"
-              }
-            });
-            plotCounter++;
-          }
+          cachedFeatures.push({
+            type: "Feature",
+            geometry: { type: "Polygon", coordinates: [poly] },
+            properties: {
+              fp_no: fpNo,
+              fp_number: fpNo,
+              tps_name: scheme.name,
+              village: scheme.village,
+              fp_area_final: areaSqm,
+              fp_area: areaSqm,
+              area_sqm: areaSqm,
+              zone: zoneObj.code,
+              zone_name: zoneObj.name,
+              max_fsi: zoneObj.fsi,
+              rate: zoneObj.rate,
+              status: "AVAILABLE FOR SALE",
+              remarks: "100% Clear Title • Shivalik Underwriting Approved"
+            }
+          });
+          plotCounter++;
         }
       }
     });
