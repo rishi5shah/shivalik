@@ -129,7 +129,7 @@ async function fetchRealWfsPlotsForScheme(scheme, schemeIdx) {
   const maxLng = Math.max(...lngs);
 
   const bbox = `${minLng},${minLat},${maxLng},${maxLat},EPSG:4326`;
-  const url = `https://tpvd.openprp.in/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&srsName=EPSG:4326&bbox=${bbox}`;
+  const url = `https://tpvd.openprp.in/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=10000&srsName=EPSG:4326&bbox=${bbox}`;
 
   // Allow government SSL certs without failing
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';

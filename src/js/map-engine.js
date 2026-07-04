@@ -310,7 +310,7 @@ class MapEngine {
       }
 
       if (!geojsonData || !geojsonData.features || geojsonData.features.length === 0) {
-        const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&bbox=72.40,22.95,72.68,23.18`;
+        const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=10000&bbox=72.40,22.95,72.68,23.18`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
         const response = await fetch(url, { signal: controller.signal });
@@ -506,7 +506,7 @@ class MapEngine {
       }
 
       const bbox = `${minLng},${minLat},${maxLng},${maxLat},EPSG:4326`;
-      const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=200&bbox=${minLng},${minLat},${maxLng},${maxLat}`;
+      const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=10000&bbox=${minLng},${minLat},${maxLng},${maxLat}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 25000);
       const response = await fetch(url, { signal: controller.signal });
