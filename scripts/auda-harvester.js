@@ -117,8 +117,8 @@ function isPointInPoly(point, vs) {
   return inside;
 }
 
-// Subdivide the ENTIRE Town Planning scheme boundary polygon from edge to edge into abutting urban cadastral plots
-function subdivideSchemeIntoPlots(scheme, schemeIdx) {
+// Fetch real cadastral plot boundaries from official Gujarat Government WFS endpoint
+async function fetchRealWfsPlotsForScheme(scheme, schemeIdx) {
   if (!scheme.boundary || scheme.boundary.length < 3) return [];
 
   const lats = scheme.boundary.map(p => p[0]);
@@ -128,74 +128,37 @@ function subdivideSchemeIntoPlots(scheme, schemeIdx) {
   const minLng = Math.min(...lngs);
   const maxLng = Math.max(...lngs);
 
-  const latSpan = maxLat - minLat;
-  const lngSpan = maxLng - minLng;
+  const bbox = `${minLng},${minLat},${maxLng},${maxLat},EPSG:4326`;
+  const url = `https://tpvd.openprp.in/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&srsName=EPSG:4326&bbox=${bbox}`;
 
-  const numRows = Math.max(8, Math.round(latSpan / 0.00065));
-  const numCols = Math.max(8, Math.round(lngSpan / 0.00075));
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
 
-  const vertexGrid = [];
-  for (let r = 0; r <= numRows; r++) {
-    const rowArr = [];
-    for (let c = 0; c <= numCols; c++) {
-      let lat = minLat + (r / numRows) * latSpan;
-      let lng = minLng + (c / numCols) * lngSpan;
-
-      if (r >= Math.floor(numRows * 0.33)) lat += 0.00015;
-      if (r >= Math.floor(numRows * 0.66)) lat += 0.00015;
-      if (c >= Math.floor(numCols * 0.33)) lng += 0.00018;
-      if (c >= Math.floor(numCols * 0.66)) lng += 0.00018;
-
-      rowArr.push([parseFloat(lng.toFixed(6)), parseFloat(lat.toFixed(6))]);
+    if (data && data.features && data.features.length > 0) {
+      log(`[SUCCESS] Harvested ${data.features.length} real official Final Plots from CTPVD GeoServer for ${scheme.name}.`);
+      return data.features.map((feat, idx) => enrichPlotFeature(feat, scheme, idx + 1));
     }
-    vertexGrid.push(rowArr);
+  } catch (err) {
+    log(`[WARN] Government WFS server temporarily busy or offline for ${scheme.name}: ${err.message}. ZERO synthetic procedural boxes will be generated.`);
   }
-
-  const schemeFeatures = [];
-  let plotCounter = 1;
-
-  for (let r = 0; r < numRows; r++) {
-    for (let c = 0; c < numCols; c++) {
-      const v0 = vertexGrid[r][c];
-      const v1 = vertexGrid[r][c + 1];
-      const v2 = vertexGrid[r + 1][c + 1];
-      const v3 = vertexGrid[r + 1][c];
-
-      const centroidLat = (v0[1] + v2[1]) / 2;
-      const centroidLng = (v0[0] + v2[0]) / 2;
-
-      let insideCount = 0;
-      if (isPointInPoly([v0[1], v0[0]], scheme.boundary)) insideCount++;
-      if (isPointInPoly([v1[1], v1[0]], scheme.boundary)) insideCount++;
-      if (isPointInPoly([v2[1], v2[0]], scheme.boundary)) insideCount++;
-      if (isPointInPoly([v3[1], v3[0]], scheme.boundary)) insideCount++;
-
-      if (insideCount >= 3 || (insideCount >= 2 && isPointInPoly([centroidLat, centroidLng], scheme.boundary)) || isPointInPoly([centroidLat, centroidLng], scheme.boundary)) {
-        const poly = [v0, v1, v2, v3, v0];
-        const rawFeature = {
-          type: "Feature",
-          geometry: { type: "Polygon", coordinates: [poly] },
-          properties: {}
-        };
-        const enriched = enrichPlotFeature(rawFeature, scheme, plotCounter);
-        schemeFeatures.push(enriched);
-        plotCounter++;
-      }
-    }
-  }
-  return schemeFeatures;
+  return [];
 }
 
 // Main ETL Pipeline Execution
 async function runHarvestPipeline() {
-  log("Starting Shivalik Automated Nightly ETL Harvester Pipeline...");
+  log("Starting Shivalik Automated Nightly ETL Harvester Pipeline (Live Government WFS Bridge)...");
   const masterFeatures = [];
   
   for (let i = 0; i < AUDA_CORRIDORS.length; i++) {
     const corridor = AUDA_CORRIDORS[i];
     log(`Processing Corridor [${i+1}/${AUDA_CORRIDORS.length}]: ${corridor.name}...`);
     
-    const plots = subdivideSchemeIntoPlots(corridor, i);
+    const plots = await fetchRealWfsPlotsForScheme(corridor, i);
     masterFeatures.push(...plots);
   }
   
@@ -203,10 +166,10 @@ async function runHarvestPipeline() {
     type: "FeatureCollection",
     metadata: {
       generated_at: new Date().toISOString(),
-      generator: "Shivalik RoS Automated Nightly ETL Harvester (v7.2 Institutional Vault)",
+      generator: "Shivalik RoS Automated Nightly ETL Harvester (v7.5 Live Government Bridge)",
       total_parcels: masterFeatures.length,
-      authority_coverage: "AUDA (Ahmedabad Urban Development Authority)",
-      moat_status: "100% SELF-HOSTED PROPRIETARY DATA VAULT"
+      authority_coverage: "AUDA / Gujarat CTPVD (Town Planning & Valuation Department)",
+      moat_status: "100% AUTHENTIC GOVERNMENT CADASTRAL DATA"
     },
     features: masterFeatures
   };
@@ -218,8 +181,8 @@ async function runHarvestPipeline() {
   }
   
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(masterGeoJSON, null, 2), 'utf8');
-  log(`Successfully written ${masterFeatures.length} institutional parcels to ${OUTPUT_FILE}`);
-  log("ETL Harvester Pipeline Completed Successfully. Shivalik Data Moat is 100% Secure & Active.");
+  log(`Successfully written ${masterFeatures.length} authentic institutional parcels to ${OUTPUT_FILE}`);
+  log("ETL Harvester Pipeline Completed Successfully. Zero synthetic procedural generation used.");
 }
 
 runHarvestPipeline().catch(err => {

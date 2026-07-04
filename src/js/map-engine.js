@@ -107,8 +107,22 @@ class MapEngine {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
       
+      // Check if clicked point is directly inside any locally loaded cadastral plot
+      if (window.loadedVectorFeatures && window.loadedVectorFeatures.length > 0) {
+        for (const feat of window.loadedVectorFeatures) {
+          if (!feat.geometry) continue;
+          let coords = null;
+          if (feat.geometry.type === 'Polygon' && feat.geometry.coordinates) coords = feat.geometry.coordinates[0];
+          else if (feat.geometry.type === 'MultiPolygon' && feat.geometry.coordinates) coords = feat.geometry.coordinates[0][0];
+          if (coords && coords.length && this._isPointInPolygon([lat, lng], coords)) {
+            window.dueDiligenceController.openDrawer(feat.properties, null);
+            return;
+          }
+        }
+      }
+
       try {
-        if (window.searchController) {
+        if (window.searchController && typeof window.searchController.showToast === 'function') {
           window.searchController.showToast("[WFS] Querying official Gujarat Town Planning GeoServer...");
         }
 
@@ -116,9 +130,9 @@ class MapEngine {
         const bbox = `${lng - 0.0003},${lat - 0.0003},${lng + 0.0003},${lat + 0.0003},EPSG:4326`;
         const url = `${this._gw}/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=1&srsName=EPSG:4326&bbox=${bbox}`;
         
-        // 1.2s timeout for network fetch so UI never freezes while giving GeoServer enough time
+        // 4.0s timeout for network fetch to give government GeoServer sufficient time
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1200);
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
 
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -127,16 +141,13 @@ class MapEngine {
         if (data && data.features && data.features.length > 0) {
           const feature = data.features[0];
           window.dueDiligenceController.openDrawer(feature.properties, null);
-        } else if (window.loadedVectorFeatures && window.loadedVectorFeatures.length > 0) {
-          // Fallback if clicked in open road/area: open nearest real plot from loaded features
-          const fallback = window.loadedVectorFeatures[Math.floor(Math.random() * Math.min(15, window.loadedVectorFeatures.length))];
-          window.dueDiligenceController.openDrawer(fallback.properties, null);
+        } else if (window.searchController && typeof window.searchController.showToast === 'function') {
+          window.searchController.showToast("[INFO] Clicked outside registered cadastral plot or in road reserve.");
         }
       } catch (err) {
-        console.log("Using instant fallback plot for clicked coordinates:", err);
-        if (window.loadedVectorFeatures && window.loadedVectorFeatures.length > 0) {
-          const fallback = window.loadedVectorFeatures[Math.floor(Math.random() * Math.min(15, window.loadedVectorFeatures.length))];
-          window.dueDiligenceController.openDrawer(fallback.properties, null);
+        console.log("Government WFS query timeout/offline for clicked coordinates:", err);
+        if (window.searchController && typeof window.searchController.showToast === 'function') {
+          window.searchController.showToast("[INFO] Clicked outside registered cadastral plot or server offline.");
         }
       }
     });
@@ -155,7 +166,7 @@ class MapEngine {
 
     // Define AUDA / Gujarat TP layers discovered from GeoServer
     const layerConfigs = [
-      { id: 'fp_boundary', name: 'ctp:final_plot_boundary', defaultVisible: false, opacity: 0.8 },
+      { id: 'fp_boundary', name: 'ctp:final_plot_boundary', defaultVisible: true, opacity: 0.85 },
       { id: 'op_boundary', name: 'ctp:original_plot_boundary', defaultVisible: false, opacity: 0.6 },
       { id: 'tp_roads', name: 'ctp:road', defaultVisible: true, opacity: 0.75 },
       { id: 'dp_reservations', name: 'ctp:dp_reservation_line', defaultVisible: false, opacity: 0.7 },
@@ -186,13 +197,6 @@ class MapEngine {
         if (!this.map.hasLayer(layer)) layer.addTo(this.map);
       } else {
         if (this.map.hasLayer(layer)) this.map.removeLayer(layer);
-      }
-    }
-    if (layerId === 'fp_boundary' && this.vectorLayer) {
-      if (isVisible) {
-        if (!this.map.hasLayer(this.vectorLayer)) this.vectorLayer.addTo(this.map);
-      } else {
-        if (this.map.hasLayer(this.vectorLayer)) this.map.removeLayer(this.vectorLayer);
       }
     }
   }
