@@ -130,9 +130,9 @@ class MapEngine {
         const bbox = `${lng - 0.0003},${lat - 0.0003},${lng + 0.0003},${lat + 0.0003},EPSG:4326`;
         const url = `${this._gw}/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=1&srsName=EPSG:4326&bbox=${bbox}`;
         
-        // 4.0s timeout for network fetch to give government GeoServer sufficient time
+        // 15.0s timeout for network fetch to give government GeoServer sufficient time under load
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -312,7 +312,7 @@ class MapEngine {
       if (!geojsonData || !geojsonData.features || geojsonData.features.length === 0) {
         const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&bbox=72.40,22.95,72.68,23.18`;
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1200);
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
         geojsonData = await response.json();
@@ -508,7 +508,7 @@ class MapEngine {
       const bbox = `${minLng},${minLat},${maxLng},${maxLat},EPSG:4326`;
       const url = `${this._gw}/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=200&bbox=${minLng},${minLat},${maxLng},${maxLat}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
       const geojsonData = await response.json();

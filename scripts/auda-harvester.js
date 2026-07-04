@@ -117,7 +117,7 @@ function isPointInPoly(point, vs) {
   return inside;
 }
 
-// Fetch real cadastral plot boundaries from official Gujarat Government WFS endpoint
+// Fetch real cadastral plot boundaries from official Gujarat Government WFS endpoint with retries and extended timeout
 async function fetchRealWfsPlotsForScheme(scheme, schemeIdx) {
   if (!scheme.boundary || scheme.boundary.length < 3) return [];
 
@@ -131,20 +131,34 @@ async function fetchRealWfsPlotsForScheme(scheme, schemeIdx) {
   const bbox = `${minLng},${minLat},${maxLng},${maxLat},EPSG:4326`;
   const url = `https://tpvd.openprp.in/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ctp:final_plot_boundary&outputFormat=application/json&maxFeatures=500&srsName=EPSG:4326&bbox=${bbox}`;
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+  // Allow government SSL certs without failing
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-    if (data && data.features && data.features.length > 0) {
-      log(`[SUCCESS] Harvested ${data.features.length} real official Final Plots from CTPVD GeoServer for ${scheme.name}.`);
-      return data.features.map((feat, idx) => enrichPlotFeature(feat, scheme, idx + 1));
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const controller = new AbortController();
+      // 45 seconds timeout (government servers can take 20-40 seconds under load)
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (data && data.features && data.features.length > 0) {
+        log(`[SUCCESS] Harvested ${data.features.length} real official Final Plots from CTPVD GeoServer for ${scheme.name}.`);
+        return data.features.map((feat, idx) => enrichPlotFeature(feat, scheme, idx + 1));
+      }
+      break; // Successful response even if 0 features found
+    } catch (err) {
+      const reason = err.cause ? (err.cause.message || err.cause.code) : err.message;
+      if (attempt < 3) {
+        log(`[RETRY ${attempt}/3] WFS query slow/error for ${scheme.name} (${reason}). Retrying in 3s...`);
+        await new Promise(r => setTimeout(r, 3000));
+      } else {
+        log(`[WARN] Government WFS server temporarily busy or offline for ${scheme.name}: ${reason}. ZERO synthetic procedural boxes will be generated.`);
+      }
     }
-  } catch (err) {
-    log(`[WARN] Government WFS server temporarily busy or offline for ${scheme.name}: ${err.message}. ZERO synthetic procedural boxes will be generated.`);
   }
   return [];
 }
