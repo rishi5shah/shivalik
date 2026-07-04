@@ -458,7 +458,10 @@ class MapEngine {
         : (window.officialAudaPlotCache || []);
 
       const matchingLocal = localPool.filter(feat => {
-        if (!feat.geometry || !this.isPlotAvailableForSale(feat)) return false;
+        if (!feat || !feat.geometry || !this.isPlotAvailableForSale(feat)) return false;
+        const props = feat.properties || {};
+        if (props.tps_id && (props.tps_id === scheme.id || props.tps_id === scheme.tps_id)) return true;
+        if (props.tps_name && (props.tps_name === scheme.name || scheme.name.includes(props.tps_name) || props.tps_name.includes(scheme.name))) return true;
         let coords = null;
         if (feat.geometry.type === 'Polygon' && feat.geometry.coordinates) coords = feat.geometry.coordinates[0];
         else if (feat.geometry.type === 'MultiPolygon' && feat.geometry.coordinates) coords = feat.geometry.coordinates[0][0];
@@ -588,7 +591,10 @@ class MapEngine {
       : (window.officialAudaPlotCache || []);
 
     let plotsToRender = availablePool.filter(feature => {
-          if (!feature.geometry || !this.isPlotAvailableForSale(feature)) return false;
+          if (!feature || !feature.geometry || !this.isPlotAvailableForSale(feature)) return false;
+          const props = feature.properties || {};
+          if (props.tps_id && (props.tps_id === scheme.id || props.tps_id === scheme.tps_id)) return true;
+          if (props.tps_name && (props.tps_name === scheme.name || scheme.name.includes(props.tps_name) || props.tps_name.includes(scheme.name))) return true;
           let coords = null;
           if (feature.geometry.type === 'Polygon' && feature.geometry.coordinates) coords = feature.geometry.coordinates[0];
           else if (feature.geometry.type === 'MultiPolygon' && feature.geometry.coordinates) coords = feature.geometry.coordinates[0][0];
