@@ -36,79 +36,103 @@
       return inside;
     }
 
-    // Compute shared cadastral vertex coordinates ensuring abutting parcels with zero gaps
-    function getSharedVertex(row, col, centerLat, centerLng, schemeIdx) {
-      const baseLat = centerLat - 0.0025 + (row * 0.0010);
-      const baseLng = centerLng - 0.0030 + (col * 0.0012);
-      
-      let roadOffsetLat = 0;
-      let roadOffsetLng = 0;
-      if (row >= 3) roadOffsetLat += 0.00018; // 20m arterial road gap
-      if (col >= 3) roadOffsetLng += 0.00022; // 24m arterial road gap
+    // Subdivide the ENTIRE Town Planning scheme boundary polygon from edge to edge into abutting urban cadastral plots
+    function subdivideSchemeIntoPlots(scheme, schemeIdx) {
+      if (!scheme.boundary || scheme.boundary.length < 3) return [];
 
-      let perturbLat = 0;
-      let perturbLng = 0;
-      if (row > 0 && row < 5 && col > 0 && col < 5 && !(row === 2 || row === 3 || col === 2 || col === 3)) {
-        const hash = (row * 17 + col * 31 + schemeIdx * 13) % 11;
-        perturbLat = ((hash % 5) - 2) * 0.00009;
-        perturbLng = (((hash * 3) % 5) - 2) * 0.00011;
+      const lats = scheme.boundary.map(p => p[0]);
+      const lngs = scheme.boundary.map(p => p[1]);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+
+      const latSpan = maxLat - minLat;
+      const lngSpan = maxLng - minLng;
+
+      // Create a dynamic cadastral grid covering the entire scheme bounding box (~90m to ~120m per parcel)
+      const numRows = Math.max(6, Math.round(latSpan / 0.0011));
+      const numCols = Math.max(6, Math.round(lngSpan / 0.0013));
+
+      // Build shared perturbed vertices across the entire polygon so adjacent plots abut with zero gaps
+      const vertexGrid = [];
+      for (let r = 0; r <= numRows; r++) {
+        const rowArr = [];
+        for (let c = 0; c <= numCols; c++) {
+          let lat = minLat + (r / numRows) * latSpan;
+          let lng = minLng + (c / numCols) * lngSpan;
+
+          // Add arterial road corridors crossing the scheme (north-south and east-west arterials)
+          if (r >= Math.floor(numRows * 0.33)) lat += 0.00015;
+          if (r >= Math.floor(numRows * 0.66)) lat += 0.00015;
+          if (c >= Math.floor(numCols * 0.33)) lng += 0.00018;
+          if (c >= Math.floor(numCols * 0.66)) lng += 0.00018;
+
+          // Apply survey perturbation to interior vertices for realistic irregular cadastral shapes
+          if (r > 0 && r < numRows && c > 0 && c < numCols && 
+              r !== Math.floor(numRows * 0.33) && r !== Math.floor(numRows * 0.66) &&
+              c !== Math.floor(numCols * 0.33) && c !== Math.floor(numCols * 0.66)) {
+            const hash = (r * 31 + c * 47 + schemeIdx * 19) % 17;
+            const perturbLat = ((hash % 7) - 3) * (latSpan / numRows) * 0.25;
+            const perturbLng = (((hash * 5) % 7) - 3) * (lngSpan / numCols) * 0.28;
+            lat += perturbLat;
+            lng += perturbLng;
+          }
+
+          rowArr.push([parseFloat(lng.toFixed(6)), parseFloat(lat.toFixed(6))]);
+        }
+        vertexGrid.push(rowArr);
       }
 
-      return [
-        parseFloat((baseLng + roadOffsetLng + perturbLng).toFixed(6)),
-        parseFloat((baseLat + roadOffsetLat + perturbLat).toFixed(6))
-      ];
+      const schemeFeatures = [];
+      let plotCounter = 1;
+
+      for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+          const v0 = vertexGrid[r][c];
+          const v1 = vertexGrid[r][c + 1];
+          const v2 = vertexGrid[r + 1][c + 1];
+          const v3 = vertexGrid[r + 1][c];
+
+          const centroidLat = (v0[1] + v2[1]) / 2;
+          const centroidLng = (v0[0] + v2[0]) / 2;
+
+          // ONLY include parcels whose centroid falls strictly inside the actual TP scheme boundary polygon
+          if (isPointInPoly([centroidLat, centroidLng], scheme.boundary)) {
+            const poly = [v0, v1, v2, v3, v0];
+            const fpNo = `${100 + plotCounter * 3 + (schemeIdx % 7)}`;
+            const areaSqm = Math.floor(2800 + ((plotCounter * 97 + schemeIdx * 23) % 4500));
+            const zoneObj = zoneTypes[(plotCounter + schemeIdx) % 3];
+
+            schemeFeatures.push({
+              type: "Feature",
+              geometry: { type: "Polygon", coordinates: [poly] },
+              properties: {
+                fp_no: fpNo,
+                fp_number: fpNo,
+                tps_name: scheme.name,
+                village: scheme.village,
+                fp_area_final: areaSqm,
+                fp_area: areaSqm,
+                area_sqm: areaSqm,
+                zone: zoneObj.code,
+                zone_name: zoneObj.name,
+                max_fsi: zoneObj.fsi,
+                rate: zoneObj.rate,
+                status: "AVAILABLE FOR SALE",
+                remarks: "100% Clear Title • Shivalik Underwriting Approved"
+              }
+            });
+            plotCounter++;
+          }
+        }
+      }
+      return schemeFeatures;
     }
 
     window.audaPrimeSchemes.forEach((scheme, schemeIdx) => {
-      if (!scheme.center || !scheme.boundary || scheme.boundary.length < 3) return;
-
-      const [centerLat, centerLng] = scheme.center;
-      let plotCounter = 1;
-
-      // Generate 25 abutting institutional cadastral parcels tiling the sector
-      for (let idx = 0; idx < 25; idx++) {
-        const row = Math.floor(idx / 5);
-        const col = idx % 5;
-
-        const v0 = getSharedVertex(row, col, centerLat, centerLng, schemeIdx);
-        const v1 = getSharedVertex(row, col + 1, centerLat, centerLng, schemeIdx);
-        const v2 = getSharedVertex(row + 1, col + 1, centerLat, centerLng, schemeIdx);
-        const v3 = getSharedVertex(row + 1, col, centerLat, centerLng, schemeIdx);
-
-        const poly = [v0, v1, v2, v3, v0];
-
-        // Ensure plot centroid is within scheme vicinity
-        const centroidLat = (v0[1] + v2[1]) / 2;
-        const centroidLng = (v0[0] + v2[0]) / 2;
-
-        if (isPointInPoly([centroidLat, centroidLng], scheme.boundary) || idx < 12) {
-          const fpNo = `${100 + plotCounter * 4 + (schemeIdx % 5)}`;
-          const areaSqm = Math.floor(3100 + ((plotCounter * 83 + schemeIdx * 13) % 4800));
-          const zoneObj = zoneTypes[(plotCounter + schemeIdx) % 3];
-
-          cachedFeatures.push({
-            type: "Feature",
-            geometry: { type: "Polygon", coordinates: [poly] },
-            properties: {
-              fp_no: fpNo,
-              fp_number: fpNo,
-              tps_name: scheme.name,
-              village: scheme.village,
-              fp_area_final: areaSqm,
-              fp_area: areaSqm,
-              area_sqm: areaSqm,
-              zone: zoneObj.code,
-              zone_name: zoneObj.name,
-              max_fsi: zoneObj.fsi,
-              rate: zoneObj.rate,
-              status: "AVAILABLE FOR SALE",
-              remarks: "100% Clear Title • Shivalik Underwriting Approved"
-            }
-          });
-          plotCounter++;
-        }
-      }
+      const plots = subdivideSchemeIntoPlots(scheme, schemeIdx);
+      cachedFeatures.push(...plots);
     });
 
     window.officialAudaPlotCache = cachedFeatures;

@@ -442,7 +442,11 @@ const AUDA_PRIME_SCHEMES = [
       configurable: false
     });
   } catch(e) {
-    window.audaPrimeSchemes = AUDA_PRIME_SCHEMES;
+    if (typeof window !== 'undefined') window.audaPrimeSchemes = AUDA_PRIME_SCHEMES;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AUDA_PRIME_SCHEMES;
   }
 
 })();
